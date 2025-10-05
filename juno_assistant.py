@@ -169,5 +169,3 @@ class JunoAssistant:
     def _get_avatar_emotion(self, mood: str) -> str:
         """Get appropriate avatar emotion for mood"""
         return self.extras.avatar_controller.get_expression(mood)
-
-
