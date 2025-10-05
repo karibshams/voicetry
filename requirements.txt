@@ -1,0 +1,10 @@
+# AI Services
+openai
+google-cloud-speech
+google-cloud-texttospeech
+
+# Sentiment Analysis
+textblob
+
+# Environment Variables
+python-dotenv
