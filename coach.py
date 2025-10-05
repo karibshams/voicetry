@@ -1,7 +1,7 @@
 from typing import Dict, Tuple, Optional
-from .stt_tts import STTTTSService
-from .openai_agent import OpenAIAgent
-from .sentiment import SentimentAnalyzer
+from stt_tts import STTTTSService
+from openai_agent import OpenAIAgent
+from sentiment import SentimentAnalyzer
 
 class WellnessCoach:
     """Voice journaling and coaching pipeline orchestrator"""
