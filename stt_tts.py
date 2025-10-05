@@ -6,6 +6,7 @@ class STTTTSService:
     """Google Speech-to-Text and Text-to-Speech service handler"""
     
     def __init__(self):
+        # Google Cloud clients will use GOOGLE_CLOUD_API_KEY from environment
         self.stt_client = speech.SpeechClient()
         self.tts_client = texttospeech.TextToSpeechClient()
         self.voice_config = {
