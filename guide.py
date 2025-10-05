@@ -1,6 +1,6 @@
 import json
 from typing import Dict, Optional
-
+from openai_agent import OpenAIAgent
 class AppGuide:
     """AI helper for app feature explanations"""
     
