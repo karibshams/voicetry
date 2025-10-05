@@ -104,4 +104,3 @@ class AvatarController:
     def get_affirmation_pose(self) -> Dict[str, str]:
         """Special pose for affirmations"""
         return {'animation': 'encouraging_gesture', 'glow': 'inspiring_gold'}
-
