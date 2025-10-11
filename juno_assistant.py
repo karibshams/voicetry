@@ -1,11 +1,11 @@
 import os
 from typing import Dict, List, Optional, Union
-from .stt_tts import STTTTSService
-from .openai_agent import OpenAIAgent
-from .sentiment import SentimentAnalyzer
-from .coach import WellnessCoach
-from .guide import AppGuide
-from .extras import JunoExtras
+from stt_tts import STTTTSService
+from openai_agent import OpenAIAgent
+from sentiment import SentimentAnalyzer
+from coach import WellnessCoach
+from guide import AppGuide
+from extras import JunoExtras
 
 class JunoAssistant:
     """
