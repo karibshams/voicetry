@@ -1,7 +1,3 @@
-# ==========================================
-# main.py - Juno Assistant
-# ==========================================
-
 import openai
 from textblob import TextBlob
 import json
