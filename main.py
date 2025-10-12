@@ -16,10 +16,6 @@ class JunoAssistant:
     
     def __init__(self):
         openai.api_key = os.getenv('OPENAI_API_KEY')
-        
-        # Import and initialize all modules
-        
-        
         self.voice = VoiceEngine()
         self.prompts = Prompts()
         self.guide = AppGuide()
