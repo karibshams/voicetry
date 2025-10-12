@@ -19,7 +19,7 @@ class JunoAssistant:
         openai.api_key = os.getenv('OPENAI_API_KEY')
         self.voice = VoiceEngine()
         self.prompts = Prompts()
-        self.guide = JunoGuide()
+        self.juno_guide = JunoGuide()
         
         # Unlimited memory
         self.memory = []
