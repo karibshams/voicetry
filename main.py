@@ -33,6 +33,7 @@ class JunoAssistant:
         text = stt['text']
         lang = stt['language']
         
+
         if not text:
             return self._error("I couldn't hear you clearly", lang)
         
