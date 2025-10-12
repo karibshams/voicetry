@@ -32,7 +32,7 @@ class JunoAssistant:
         stt = self.voice.speech_to_text(audio_data)
         text = stt['text']
         lang = stt['language']
-        
+        gender = stt['speaker_gender']
 
         if not text:
             return self._error("I couldn't hear you clearly", lang)
@@ -50,8 +50,6 @@ class JunoAssistant:
         
         sentiment = self._get_sentiment(text)
         system_prompt = self.prompts.get('juno', lang)
-        
-        # Build messages with ALL memory
         messages = [{'role': 'system', 'content': system_prompt}]
         
         # Add greeting context for returning users
@@ -71,7 +69,7 @@ class JunoAssistant:
         response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=200,
+            max_tokens=250,
             temperature=0.8
         )
         
