@@ -20,15 +20,11 @@ class JunoAssistant:
         self.voice = VoiceEngine()
         self.prompts = Prompts()
         self.juno_guide = JunoGuide()
-        
-        # Unlimited memory
         self.memory = []
         self.context = {'greeted': False}
     
     def process_voice(self, audio_data: bytes) -> dict:
         """Main voice processing pipeline"""
-        
-        # 1. Speech to text
         stt = self.voice.speech_to_text(audio_data)
         text = stt['text']
         lang = stt['language']
@@ -37,7 +33,6 @@ class JunoAssistant:
         if not text:
             return self._error("I couldn't hear you clearly", lang)
         
-        # 2. Route to appropriate AI
         if self._is_crisis(text):
             return self._handle_crisis(text, lang)
         elif self._is_guide_query(text):
@@ -51,21 +46,18 @@ class JunoAssistant:
         sentiment = self._get_sentiment(text)
         system_prompt = self.prompts.get('juno', lang)
         messages = [{'role': 'system', 'content': system_prompt}]
-        
-        # Add greeting context for returning users
+
         if self.memory and not self.context['greeted']:
             last = self.memory[-1]['user'][:80]
             messages.append({'role': 'system', 'content': f"Returning user. Last talked about: {last}"})
             self.context['greeted'] = True
         
-        # Add full conversation history
         for m in self.memory:
             messages.append({'role': 'user', 'content': m['user']})
             messages.append({'role': 'assistant', 'content': m['assistant']})
         
         messages.append({'role': 'user', 'content': text})
         
-        # Get AI response
         response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=messages,
@@ -76,7 +68,6 @@ class JunoAssistant:
         reply = response.choices[0].message.content
         audio = self.voice.text_to_speech(reply, lang, 'female')
         
-        # Store in memory
         self._save_memory(text, reply, sentiment, lang, 'juno')
         
         return {
