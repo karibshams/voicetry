@@ -1,13 +1,11 @@
 import os
 from google.cloud import speech_v1 as speech
 from google.cloud import texttospeech_v1 as texttospeech
-from typing import Dict
 
 class VoiceEngine:
-    """Handles Speech-to-Text, Text-to-Speech with Google Cloud API"""
+    """Google Cloud Speech-to-Text and Text-to-Speech handler"""
     
     def __init__(self):
-        # Uses GOOGLE_CLOUD_API_KEY from environment automatically
         self.stt_client = speech.SpeechClient()
         self.tts_client = texttospeech.TextToSpeechClient()
         
@@ -16,15 +14,9 @@ class VoiceEngine:
             'hi': {'male': 'hi-IN-Neural2-B', 'female': 'hi-IN-Neural2-A'},
             'pt': {'male': 'pt-BR-Neural2-B', 'female': 'pt-BR-Neural2-A'}
         }
-        
-        self.language_codes = {
-            'en': 'en-US',
-            'hi': 'hi-IN',
-            'pt': 'pt-BR'
-        }
     
-    def speech_to_text(self, audio_data: bytes) -> Dict[str, str]:
-        """Convert speech to text with auto language detection"""
+    def speech_to_text(self, audio_data: bytes) -> dict:
+        """Convert speech to text with language detection"""
         config = speech.RecognitionConfig(
             encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
             sample_rate_hertz=16000,
@@ -37,22 +29,20 @@ class VoiceEngine:
         response = self.stt_client.recognize(config=config, audio=audio)
         
         if not response.results:
-            return {'text': '', 'language': 'en', 'speaker_gender': 'female'}
+            return {'text': '', 'language': 'en'}
         
         result = response.results[0]
-        transcript = result.alternatives[0].transcript
-        detected_lang = result.language_code[:2] if hasattr(result, 'language_code') else 'en'
+        detected_lang = getattr(result, 'language_code', 'en-US')[:2]
         
         return {
-            'text': transcript,
-            'language': detected_lang,
-            'speaker_gender': 'female'
+            'text': result.alternatives[0].transcript,
+            'language': detected_lang
         }
     
     def text_to_speech(self, text: str, language: str, gender: str = 'female') -> bytes:
-        """Convert text to natural speech with gender matching"""
+        """Convert text to speech"""
         voice_name = self.voices.get(language, self.voices['en'])[gender]
-        lang_code = self.language_codes.get(language, 'en-US')
+        lang_code = f"{language}-{'US' if language == 'en' else 'IN' if language == 'hi' else 'BR'}"
         
         voice = texttospeech.VoiceSelectionParams(
             language_code=lang_code,
@@ -61,14 +51,11 @@ class VoiceEngine:
         
         audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3,
-            speaking_rate=0.95,
-            pitch=0.0
+            speaking_rate=0.95
         )
         
-        synthesis_input = texttospeech.SynthesisInput(text=text)
-        
         response = self.tts_client.synthesize_speech(
-            input=synthesis_input,
+            input=texttospeech.SynthesisInput(text=text),
             voice=voice,
             audio_config=audio_config
         )
@@ -77,30 +64,27 @@ class VoiceEngine:
 
 
 # ==========================================
-# TEST CODE FOR voice.py
+# TEST CODE
 # ==========================================
 if __name__ == "__main__":
     print("=" * 50)
-    print("TESTING: VoiceEngine Module")
+    print("Testing VoiceEngine")
     print("=" * 50)
     
     try:
-        voice = VoiceEngine()
-        print("✅ VoiceEngine initialized successfully")
+        engine = VoiceEngine()
+        print("✅ Initialized")
         
         # Test TTS
-        test_text = "Hello, I am Juno, your wellness assistant."
-        audio = voice.text_to_speech(test_text, 'en', 'female')
-        print(f"✅ TTS Working: Generated {len(audio)} bytes of audio")
-        print(f"✅ Test text: '{test_text}'")
+        audio = engine.text_to_speech("Hello, I am Juno", 'en', 'female')
+        print(f"✅ TTS: {len(audio)} bytes generated")
         
-        # Test voice configurations
+        # Test voice configs
         for lang in ['en', 'hi', 'pt']:
-            print(f"✅ Language '{lang}' configured: {voice.language_codes[lang]}")
+            print(f"✅ {lang}: {engine.voices[lang]}")
         
-        print("\n✅ ALL TESTS PASSED for voice.py")
-        
+        print("\n✅ ALL TESTS PASSED")
     except Exception as e:
-        print(f"❌ ERROR: {str(e)}")
+        print(f"❌ ERROR: {e}")
     
     print("=" * 50)
