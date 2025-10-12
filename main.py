@@ -215,72 +215,81 @@ class JunoAssistant:
 # ==========================================
 if __name__ == "__main__":
     print("=" * 50)
-    print("Testing JunoAssistant")
+    print("🧠 Juno Assistant System Tester")
     print("=" * 50)
-    
+    print("\nSelect what you want to test:")
+    print("1. Initialize System")
+    print("2. Test Sentiment Analysis")
+    print("3. Test Query Routing")
+    print("4. Test Memory Storage")
+    print("5. Test System Stats")
+    print("6. Test Memory Save/Load")
+    print("7. Run All Tests")
+    print("0. Exit")
+
+    choice = input("\n👉 Enter your choice (0–7): ").strip()
+
     try:
-        # Initialize
-        print("\n1. Initializing...")
-        juno = JunoAssistant()
-        print("✅ All modules connected")
-        
-        # Test sentiment
-        print("\n2. Testing sentiment...")
-        test_texts = ["I'm so happy!", "I feel anxious", "Just okay"]
-        for t in test_texts:
-            s = juno._get_sentiment(t)
-            print(f"✅ '{t}' → {s['mood']}")
-        
-        # Test routing
-        print("\n3. Testing AI routing...")
-        queries = [
-            ("I'm feeling sad", "juno"),
-            ("How do I use journal?", "guide"),
-            ("I want to hurt myself", "crisis")
-        ]
-        
-        for q, expected in queries:
-            if juno._is_crisis(q):
-                route = "crisis"
-            elif juno._is_guide_query(q):
-                route = "guide"
-            else:
-                route = "juno"
-            
-            status = "✅" if route == expected else "❌"
-            print(f"{status} '{q}' → {route}")
-        
-        # Test memory
-        print("\n4. Testing memory...")
-        juno._save_memory("Test message", "Test reply", {'mood': 'happy'}, 'en', 'juno')
-        print(f"✅ Memory: {len(juno.memory)} conversations")
-        
-        # Test stats
-        print("\n5. Testing stats...")
-        stats = juno.get_stats()
-        print(f"✅ Stats: {stats}")
-        
-        # Test memory persistence
-        print("\n6. Testing memory save/load...")
-        juno.save_memory('test_memory.json')
-        
-        new_juno = JunoAssistant()
-        new_juno.load_memory('test_memory.json')
-        print(f"✅ Restored {len(new_juno.memory)} conversations")
-        
+        juno = None
+
+        if choice == "0":
+            print("\n👋 Exiting...")
+            exit()
+
+        if choice in ["1", "2", "3", "4", "5", "6", "7"]:
+            print("\n1. Initializing...")
+            juno = JunoAssistant()
+            print("✅ All modules connected")
+
+        if choice in ["2", "7"]:
+            print("\n2. Testing sentiment...")
+            test_texts = ["I'm so happy!", "I feel anxious", "Just okay"]
+            for t in test_texts:
+                s = juno._get_sentiment(t)
+                print(f"✅ '{t}' → {s['mood']}")
+
+        if choice in ["3", "7"]:
+            print("\n3. Testing AI routing...")
+            queries = [
+                ("I'm feeling sad", "juno"),
+                ("How do I use journal?", "guide"),
+                ("I want to hurt myself", "crisis")
+            ]
+            for q, expected in queries:
+                if juno._is_crisis(q):
+                    route = "crisis"
+                elif juno._is_guide_query(q):
+                    route = "guide"
+                else:
+                    route = "juno"
+
+                status = "✅" if route == expected else "❌"
+                print(f"{status} '{q}' → {route}")
+
+        if choice in ["4", "7"]:
+            print("\n4. Testing memory...")
+            juno._save_memory("Test message", "Test reply", {'mood': 'happy'}, 'en', 'juno')
+            print(f"✅ Memory: {len(juno.memory)} conversations")
+
+        if choice in ["5", "7"]:
+            print("\n5. Testing stats...")
+            stats = juno.get_stats()
+            print(f"✅ Stats: {stats}")
+
+        if choice in ["6", "7"]:
+            print("\n6. Testing memory save/load...")
+            juno.save_memory('test_memory.json')
+            new_juno = JunoAssistant()
+            new_juno.load_memory('test_memory.json')
+            print(f"✅ Restored {len(new_juno.memory)} conversations")
+
         print("\n" + "=" * 50)
-        print("✅ ALL TESTS PASSED")
+        print("✅ Test Complete")
         print("=" * 50)
-        print("\n📋 System Ready:")
-        print("   • 2 AI: Juno (wellness) + Guide (app)")
-        print("   • Unlimited memory with persistence")
-        print("   • Crisis detection active")
-        print("   • Multi-language: en, hi, pt")
-        print("   • Model: gpt-4o-mini")
-        
+
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
-    
+
     print("=" * 50)
