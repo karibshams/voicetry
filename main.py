@@ -6,7 +6,7 @@ import os
 from typing import List, Dict, Optional, Union
 from voice import VoiceEngine
 from prompt import Prompts
-from guide import AppGuide
+from guide import JunoGuide
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
     
@@ -18,7 +18,7 @@ class JunoAssistant:
         openai.api_key = os.getenv('OPENAI_API_KEY')
         self.voice = VoiceEngine()
         self.prompts = Prompts()
-        self.guide = AppGuide()
+        self.guide = JunoGuide()
         
         # Unlimited memory
         self.memory = []
