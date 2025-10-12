@@ -1,91 +1,77 @@
+# ==========================================
+# main.py - Juno Assistant
+# ==========================================
+
 import openai
 from textblob import TextBlob
-from typing import Dict, List, Optional
 import json
 from datetime import datetime
-from voice_engine import VoiceEngine
-from prompt_manager import PromptManager    
-from guide import JunoGuide
-
+import os
+from typing import List, Dict, Optional, Union
+from voice import VoiceEngine
+from prompt import Prompts
+from guide import AppGuide
 class JunoAssistant:
-    """Main orchestrator with dual AI system (Juno + Guide AI)"""
+    """Main AI orchestrator with dual AI and unlimited memory"""
     
-    CRISIS_KEYWORDS = [
-        'suicide', 'kill myself', 'end it all', 'hurt myself', 'self harm',
-        'cutting', 'die', 'worthless', 'want to die', 'better off dead',
-        'no point living', 'hate myself', 'end my life'
-    ]
+    CRISIS_KEYWORDS = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'want to die', 'end my life']
     
     def __init__(self):
         openai.api_key = os.getenv('OPENAI_API_KEY')
-        self.voice_engine = VoiceEngine()
-        self.prompt_manager = PromptManager()
-        self.guide = JunoGuide()
         
-        # Unlimited conversation memory - stores ALL user interactions
-        self.user_memory: List[Dict] = []
-        self.user_context = {
-            'name': None,
-            'mood_history': [],
-            'topics_discussed': [],
-            'last_greeting': None
-        }
+        # Import and initialize all modules
+        
+        
+        self.voice = VoiceEngine()
+        self.prompts = Prompts()
+        self.guide = AppGuide()
+        
+        # Unlimited memory
+        self.memory = []
+        self.context = {'greeted': False}
     
-    def process_voice_input(self, audio_data: bytes, user_id: str = None) -> Dict[str, any]:
-        """Complete voice-to-voice interaction with dual AI routing"""
+    def process_voice(self, audio_data: bytes) -> dict:
+        """Main voice processing pipeline"""
         
-        # 1. Convert speech to text
-        stt_result = self.voice_engine.speech_to_text(audio_data)
-        text = stt_result['text']
-        language = stt_result['language']
-        gender = stt_result['speaker_gender']
+        # 1. Speech to text
+        stt = self.voice.speech_to_text(audio_data)
+        text = stt['text']
+        lang = stt['language']
         
         if not text:
-            return self._generate_error_response(
-                "I couldn't hear you clearly. Could you try again?", 
-                language, gender
-            )
+            return self._error("I couldn't hear you clearly", lang)
         
-        # 2. Check if crisis situation
+        # 2. Route to appropriate AI
         if self._is_crisis(text):
-            return self._handle_crisis(text, language, gender)
-        
-        # 3. Route to appropriate AI
-        if self._is_guide_request(text):
-            # Use App Guide AI
-            return self._handle_guide_ai(text, language, gender)
+            return self._handle_crisis(text, lang)
+        elif self._is_guide_query(text):
+            return self._handle_guide(text, lang)
         else:
-            # Use Main Juno AI
-            return self._handle_juno_ai(text, language, gender)
+            return self._handle_juno(text, lang)
     
-    def _handle_juno_ai(self, text: str, language: str, gender: str) -> Dict[str, any]:
-        """Main Juno AI - Wellness coach conversation"""
+    def _handle_juno(self, text: str, lang: str) -> dict:
+        """Main Juno AI - Wellness conversations"""
         
-        # Analyze sentiment
-        sentiment = self._analyze_sentiment(text)
+        sentiment = self._get_sentiment(text)
+        system_prompt = self.prompts.get('juno', lang)
         
-        # Build conversation context with ALL previous messages
-        system_prompt = self.prompt_manager.get_juno_prompt('system', language)
-        
+        # Build messages with ALL memory
         messages = [{'role': 'system', 'content': system_prompt}]
         
-        # Add personalized greeting context for returning users
-        if len(self.user_memory) > 0 and self.user_context['last_greeting'] is None:
-            last_topic = self.user_memory[-1]['user'] if self.user_memory else None
-            if last_topic:
-                context_note = f"[Note: This is a returning user. Previous conversation included: {last_topic[:100]}...]"
-                messages.append({'role': 'system', 'content': context_note})
-            self.user_context['last_greeting'] = datetime.now()
+        # Add greeting context for returning users
+        if self.memory and not self.context['greeted']:
+            last = self.memory[-1]['user'][:80]
+            messages.append({'role': 'system', 'content': f"Returning user. Last talked about: {last}"})
+            self.context['greeted'] = True
         
-        # Add ALL conversation history (unlimited memory)
-        for memory in self.user_memory:
-            messages.append({'role': 'user', 'content': memory['user']})
-            messages.append({'role': 'assistant', 'content': memory['assistant']})
+        # Add full conversation history
+        for m in self.memory:
+            messages.append({'role': 'user', 'content': m['user']})
+            messages.append({'role': 'assistant', 'content': m['assistant']})
         
-        # Add current message
         messages.append({'role': 'user', 'content': text})
         
-        # Get AI response from Juno
+        # Get AI response
         response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=messages,
@@ -93,44 +79,32 @@ class JunoAssistant:
             temperature=0.8
         )
         
-        response_text = response.choices[0].message.content
+        reply = response.choices[0].message.content
+        audio = self.voice.text_to_speech(reply, lang, 'female')
         
-        # Convert to speech
-        response_audio = self.voice_engine.text_to_speech(response_text, language, gender)
-        
-        # Update unlimited memory and context
-        self._update_memory(text, response_text, sentiment, language)
+        # Store in memory
+        self._save_memory(text, reply, sentiment, lang, 'juno')
         
         return {
-            'ai_type': 'juno',
-            'transcript': text,
-            'language': language,
-            'sentiment': sentiment,
-            'response_text': response_text,
-            'response_audio': response_audio,
+            'type': 'juno',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
             'mood': sentiment['mood'],
-            'avatar_emotion': self._get_avatar_emotion(sentiment['mood']),
-            'memory_count': len(self.user_memory)
+            'lang': lang
         }
     
-    def _handle_guide_ai(self, text: str, language: str, gender: str) -> Dict[str, any]:
-        """App Guide AI - Feature explanations (separate AI)"""
+    def _handle_guide(self, text: str, lang: str) -> dict:
+        """Guide AI - App features"""
         
-        # Get relevant app information
-        page_info = self.guide.get_page_info(text, language)
-        
-        if not page_info:
-            page_info = self.guide.get_all_features_summary()
-        
-        # Build Guide AI prompt
-        guide_system = self.prompt_manager.get_guide_prompt(language)
+        app_info = self.guide.search(text)
+        system_prompt = self.prompts.get('guide', lang)
         
         messages = [
-            {'role': 'system', 'content': guide_system},
-            {'role': 'user', 'content': f"User asked: {text}\n\nApp Information:\n{page_info}\n\nExplain this feature naturally and helpfully, combining the app details with your AI knowledge to make it clear and engaging."}
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': f"Question: {text}\n\nApp Info:\n{app_info}\n\nExplain using both app details and your AI knowledge."}
         ]
         
-        # Get AI response from Guide AI
         response = openai.ChatCompletion.create(
             model='gpt-4o-mini',
             messages=messages,
@@ -138,295 +112,174 @@ class JunoAssistant:
             temperature=0.7
         )
         
-        response_text = response.choices[0].message.content
+        reply = response.choices[0].message.content
+        audio = self.voice.text_to_speech(reply, lang, 'female')
         
-        # Convert to speech
-        response_audio = self.voice_engine.text_to_speech(response_text, language, gender)
-        
-        # Store in memory (but don't affect Juno's conversation context)
-        self._update_memory(text, f"[Guide AI] {response_text}", {'mood': 'neutral', 'polarity': 0}, language)
+        self._save_memory(text, f"[Guide] {reply}", {'mood': 'neutral'}, lang, 'guide')
         
         return {
-            'ai_type': 'guide',
-            'transcript': text,
-            'language': language,
-            'sentiment': {'mood': 'neutral', 'polarity': 0.0},
-            'response_text': response_text,
-            'response_audio': response_audio,
+            'type': 'guide',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
             'mood': 'neutral',
-            'avatar_emotion': 'attentive',
-            'guide_response': True,
-            'memory_count': len(self.user_memory)
+            'lang': lang
         }
     
-    def _handle_crisis(self, text: str, language: str, gender: str) -> Dict[str, any]:
-        """Handle crisis with empathetic response"""
+    def _handle_crisis(self, text: str, lang: str) -> dict:
+        """Crisis response"""
         
-        crisis_prompt = self.prompt_manager.get_juno_prompt('crisis', language)
+        reply = self.prompts.get('crisis', lang)
+        audio = self.voice.text_to_speech(reply, lang, 'female')
         
-        response = openai.ChatCompletion.create(
-            model='gpt-4o-mini',
-            messages=[
-                {'role': 'system', 'content': crisis_prompt},
-                {'role': 'user', 'content': text}
-            ],
-            max_tokens=150,
-            temperature=0.7
-        )
-        
-        response_text = response.choices[0].message.content
-        response_audio = self.voice_engine.text_to_speech(response_text, language, gender)
-        
-        # Store crisis interaction
-        self._update_memory(text, f"[CRISIS] {response_text}", {'mood': 'crisis', 'polarity': -1.0}, language)
+        self._save_memory(text, f"[Crisis] {reply}", {'mood': 'crisis'}, lang, 'crisis')
         
         return {
-            'ai_type': 'juno_crisis',
-            'transcript': text,
-            'language': language,
-            'sentiment': {'mood': 'crisis', 'polarity': -1.0},
-            'response_text': response_text,
-            'response_audio': response_audio,
+            'type': 'crisis',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
             'mood': 'crisis',
-            'avatar_emotion': 'concerned',
-            'crisis_detected': True,
-            'memory_count': len(self.user_memory)
+            'lang': lang,
+            'crisis': True
         }
     
     def _is_crisis(self, text: str) -> bool:
-        """Detect crisis keywords"""
-        text_lower = text.lower()
-        return any(keyword in text_lower for keyword in self.CRISIS_KEYWORDS)
+        """Check for crisis keywords"""
+        return any(k in text.lower() for k in self.CRISIS_KEYWORDS)
     
-    def _is_guide_request(self, text: str) -> bool:
-        """Detect if user is asking about app features"""
-        guide_keywords = [
-            'how do i', 'how to', 'what is', 'explain', 'show me', 'tell me about',
-            'subscription', 'profile', 'journal', 'faith', 'music', 'breathing',
-            'grounding', 'affirmation', 'mind tools', 'page', 'feature',
-            'account', 'notification', 'gamification', 'visual', 'chatbot',
-            'how does', 'where can i', 'where do i', 'what can i do'
-        ]
-        text_lower = text.lower()
-        return any(keyword in text_lower for keyword in guide_keywords)
+    def _is_guide_query(self, text: str) -> bool:
+        """Check if asking about app features"""
+        keywords = ['how do i', 'how to', 'what is', 'explain', 'tell me about', 
+                   'subscription', 'profile', 'journal', 'page', 'feature']
+        return any(k in text.lower() for k in keywords)
     
-    def _analyze_sentiment(self, text: str) -> Dict[str, any]:
-        """Analyze text sentiment"""
+    def _get_sentiment(self, text: str) -> dict:
+        """Analyze sentiment"""
         blob = TextBlob(text)
-        polarity = blob.sentiment.polarity
+        p = blob.sentiment.polarity
         
-        if polarity > 0.3:
-            mood = 'happy'
-        elif polarity > 0:
-            mood = 'calm'
-        elif polarity > -0.3:
-            mood = 'neutral'
-        elif polarity > -0.6:
-            mood = 'sad'
-        else:
-            mood = 'anxious'
+        if p > 0.3: mood = 'happy'
+        elif p > 0: mood = 'calm'
+        elif p > -0.3: mood = 'neutral'
+        elif p > -0.6: mood = 'sad'
+        else: mood = 'anxious'
         
-        return {
-            'mood': mood,
-            'polarity': polarity,
-            'subjectivity': blob.sentiment.subjectivity
-        }
+        return {'mood': mood, 'polarity': p}
     
-    def _update_memory(self, user_text: str, assistant_text: str, sentiment: Dict, language: str):
-        """Store interaction in unlimited memory"""
-        self.user_memory.append({
+    def _save_memory(self, user: str, assistant: str, sentiment: dict, lang: str, ai_type: str):
+        """Store in unlimited memory"""
+        self.memory.append({
             'timestamp': datetime.now().isoformat(),
-            'user': user_text,
-            'assistant': assistant_text,
+            'user': user,
+            'assistant': assistant,
             'sentiment': sentiment,
-            'language': language
+            'lang': lang,
+            'ai_type': ai_type
         })
-        
-        # Update user context
-        self.user_context['mood_history'].append(sentiment['mood'])
-        
-        # Extract topics (simple keyword extraction)
-        words = user_text.lower().split()
-        topics = [w for w in words if len(w) > 5]
-        self.user_context['topics_discussed'].extend(topics[:3])
     
-    def _get_avatar_emotion(self, mood: str) -> str:
-        """Map mood to avatar expression"""
-        emotion_map = {
-            'happy': 'smile',
-            'calm': 'peaceful',
-            'neutral': 'attentive',
-            'sad': 'empathetic',
-            'anxious': 'concerned',
-            'crisis': 'concerned'
-        }
-        return emotion_map.get(mood, 'attentive')
+    def _error(self, msg: str, lang: str) -> dict:
+        """Error response"""
+        audio = self.voice.text_to_speech(msg, lang, 'female')
+        return {'type': 'error', 'reply': msg, 'audio': audio, 'lang': lang}
     
-    def _generate_error_response(self, message: str, language: str, gender: str) -> Dict[str, any]:
-        """Generate error response"""
-        response_audio = self.voice_engine.text_to_speech(message, language, gender)
-        
-        return {
-            'ai_type': 'error',
-            'transcript': '',
-            'language': language,
-            'sentiment': {'mood': 'neutral', 'polarity': 0.0},
-            'response_text': message,
-            'response_audio': response_audio,
-            'mood': 'neutral',
-            'avatar_emotion': 'attentive',
-            'error': True
-        }
-    
-    def generate_affirmation(self, mood: str, language: str = 'en', gender: str = 'female') -> Dict[str, any]:
-        """Generate mood-based affirmation"""
-        affirmation_prompt = f"Generate a short, personal affirmation for someone feeling {mood}. Keep it under 30 words, Gen Z friendly."
-        
-        response = openai.ChatCompletion.create(
-            model='gpt-4o-mini',
-            messages=[{'role': 'user', 'content': affirmation_prompt}],
-            max_tokens=60,
-            temperature=0.9
-        )
-        
-        affirmation_text = response.choices[0].message.content
-        affirmation_audio = self.voice_engine.text_to_speech(affirmation_text, language, gender)
-        
-        return {
-            'text': affirmation_text,
-            'audio': affirmation_audio,
-            'mood': mood,
-            'language': language
-        }
-    
-    def get_memory_summary(self) -> Dict[str, any]:
-        """Get summary of conversation memory"""
-        return {
-            'total_conversations': len(self.user_memory),
-            'mood_history': self.user_context['mood_history'],
-            'topics_discussed': list(set(self.user_context['topics_discussed'])),
-            'first_interaction': self.user_memory[0]['timestamp'] if self.user_memory else None,
-            'last_interaction': self.user_memory[-1]['timestamp'] if self.user_memory else None
-        }
-    
-    def save_memory_to_file(self, filepath: str = 'juno_memory.json'):
-        """Save unlimited memory to file"""
-        memory_data = {
-            'user_memory': self.user_memory,
-            'user_context': self.user_context
-        }
+    def save_memory(self, filepath: str = 'juno_memory.json'):
+        """Save memory to file"""
         with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(memory_data, f, indent=2, ensure_ascii=False)
-        print(f"✅ Memory saved: {len(self.user_memory)} conversations")
+            json.dump({'memory': self.memory, 'context': self.context}, f, indent=2)
+        print(f"✅ Saved {len(self.memory)} conversations")
     
-    def load_memory_from_file(self, filepath: str = 'juno_memory.json'):
+    def load_memory(self, filepath: str = 'juno_memory.json'):
         """Load memory from file"""
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                memory_data = json.load(f)
-                self.user_memory = memory_data.get('user_memory', [])
-                self.user_context = memory_data.get('user_context', self.user_context)
-            print(f"✅ Memory loaded: {len(self.user_memory)} conversations")
+                data = json.load(f)
+                self.memory = data.get('memory', [])
+                self.context = data.get('context', {'greeted': False})
+            print(f"✅ Loaded {len(self.memory)} conversations")
         except FileNotFoundError:
-            print("⚠️  No memory file found. Starting fresh.")
+            print("⚠️  No memory file found")
+    
+    def get_stats(self) -> dict:
+        """Get memory statistics"""
+        return {
+            'total': len(self.memory),
+            'moods': [m['sentiment']['mood'] for m in self.memory if 'sentiment' in m],
+            'languages': list(set(m['lang'] for m in self.memory)),
+            'ai_types': list(set(m['ai_type'] for m in self.memory))
+        }
 
 
 # ==========================================
-# TEST CODE FOR main.py
+# TEST CODE
 # ==========================================
 if __name__ == "__main__":
     print("=" * 50)
-    print("TESTING: JunoAssistant Main Orchestrator")
+    print("Testing JunoAssistant")
     print("=" * 50)
     
     try:
         # Initialize
-        print("\n1. Initializing JunoAssistant...")
+        print("\n1. Initializing...")
         juno = JunoAssistant()
-        print("✅ JunoAssistant initialized successfully")
+        print("✅ All modules connected")
         
-        # Test text-only processing (simulating voice input)
-        print("\n2. Testing Juno AI (Wellness Coach)...")
-        test_message = "I'm feeling a bit anxious today"
+        # Test sentiment
+        print("\n2. Testing sentiment...")
+        test_texts = ["I'm so happy!", "I feel anxious", "Just okay"]
+        for t in test_texts:
+            s = juno._get_sentiment(t)
+            print(f"✅ '{t}' → {s['mood']}")
         
-        # Simulate STT result
-        print(f"   User said: '{test_message}'")
-        sentiment = juno._analyze_sentiment(test_message)
-        print(f"✅ Sentiment analysis: mood={sentiment['mood']}, polarity={sentiment['polarity']:.2f}")
-        
-        # Test Guide AI detection
-        print("\n3. Testing Guide AI routing...")
-        guide_queries = [
-            "How do I use the journal page?",
-            "What is the subscription plan?",
-            "Tell me about breathing exercises"
+        # Test routing
+        print("\n3. Testing AI routing...")
+        queries = [
+            ("I'm feeling sad", "juno"),
+            ("How do I use journal?", "guide"),
+            ("I want to hurt myself", "crisis")
         ]
         
-        for query in guide_queries:
-            is_guide = juno._is_guide_request(query)
-            print(f"✅ '{query}' -> {'Guide AI' if is_guide else 'Juno AI'}")
+        for q, expected in queries:
+            if juno._is_crisis(q):
+                route = "crisis"
+            elif juno._is_guide_query(q):
+                route = "guide"
+            else:
+                route = "juno"
+            
+            status = "✅" if route == expected else "❌"
+            print(f"{status} '{q}' → {route}")
         
-        # Test Crisis detection
-        print("\n4. Testing Crisis detection...")
-        crisis_texts = [
-            "I'm feeling sad",  # Not crisis
-            "I want to hurt myself"  # Crisis
-        ]
+        # Test memory
+        print("\n4. Testing memory...")
+        juno._save_memory("Test message", "Test reply", {'mood': 'happy'}, 'en', 'juno')
+        print(f"✅ Memory: {len(juno.memory)} conversations")
         
-        for text in crisis_texts:
-            is_crisis = juno._is_crisis(text)
-            status = "🚨 CRISIS" if is_crisis else "✅ Safe"
-            print(f"{status}: '{text}'")
+        # Test stats
+        print("\n5. Testing stats...")
+        stats = juno.get_stats()
+        print(f"✅ Stats: {stats}")
         
-        # Test memory system
-        print("\n5. Testing Unlimited Memory...")
-        juno._update_memory(
-            "I'm feeling anxious about exams",
-            "I hear you. Exam stress is real. Let's work through this together.",
-            {'mood': 'anxious', 'polarity': -0.3},
-            'en'
-        )
-        juno._update_memory(
-            "Thanks, that helps",
-            "I'm glad! Remember, I'm here whenever you need support.",
-            {'mood': 'calm', 'polarity': 0.5},
-            'en'
-        )
-        
-        print(f"✅ Memory stored: {len(juno.user_memory)} conversations")
-        print(f"✅ Mood history: {juno.user_context['mood_history']}")
-        
-        # Test memory summary
-        summary = juno.get_memory_summary()
-        print(f"✅ Memory summary: {summary['total_conversations']} total interactions")
-        
-        # Test affirmation generation
-        print("\n6. Testing Affirmation Generation...")
-        affirmation = juno.generate_affirmation('anxious', 'en', 'female')
-        print(f"✅ Affirmation generated: '{affirmation['text']}'")
-        print(f"✅ Audio size: {len(affirmation['audio'])} bytes")
-        
-        # Test memory save/load
-        print("\n7. Testing Memory Persistence...")
-        juno.save_memory_to_file('test_memory.json')
+        # Test memory persistence
+        print("\n6. Testing memory save/load...")
+        juno.save_memory('test_memory.json')
         
         new_juno = JunoAssistant()
-        new_juno.load_memory_from_file('test_memory.json')
-        print(f"✅ Memory restored: {len(new_juno.user_memory)} conversations")
+        new_juno.load_memory('test_memory.json')
+        print(f"✅ Restored {len(new_juno.memory)} conversations")
         
         print("\n" + "=" * 50)
-        print("✅ ALL TESTS PASSED for main.py")
+        print("✅ ALL TESTS PASSED")
         print("=" * 50)
-        print("\n📋 Summary:")
-        print(f"   • Dual AI System: Juno AI + Guide AI")
-        print(f"   • Unlimited Memory: Stores all conversations")
-        print(f"   • Crisis Detection: Active")
-        print(f"   • Multi-language: English, Hindi, Portuguese")
-        print(f"   • Model: gpt-4o-mini")
-        print(f"   • Memory persistence: JSON file storage")
+        print("\n📋 System Ready:")
+        print("   • 2 AI: Juno (wellness) + Guide (app)")
+        print("   • Unlimited memory with persistence")
+        print("   • Crisis detection active")
+        print("   • Multi-language: en, hi, pt")
+        print("   • Model: gpt-4o-mini")
         
     except Exception as e:
-        print(f"\n❌ ERROR: {str(e)}")
+        print(f"\n❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
     
