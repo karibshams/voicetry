@@ -1,7 +1,3 @@
-# ==========================================
-# prompts.py - AI Prompts Manager
-# ==========================================
-
 class Prompts:
     """Centralized AI prompts for Juno and Guide AI"""
     
