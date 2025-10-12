@@ -6,7 +6,8 @@ import os
 from typing import List, Dict, Optional, Union
 from voice import VoiceEngine
 from prompt import Prompts
-from guide import JunoGuide
+from juno_guide import JunoGuide
+
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
     
