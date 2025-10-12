@@ -10,7 +10,9 @@ from guide import AppGuide
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
     
-    CRISIS_KEYWORDS = ['suicide', 'kill myself', 'hurt myself', 'self harm', 'want to die', 'end my life']
+    CRISIS_KEYWORDS = ['suicide', 'kill myself', 'end it all', 'hurt myself', 'self harm',
+        'cutting', 'die', 'worthless', 'want to die', 'better off dead',
+        'no point living', 'hate myself', 'end my life']
     
     def __init__(self):
         openai.api_key = os.getenv('OPENAI_API_KEY')
