@@ -11,17 +11,15 @@ from prompt import Prompts
 from juno_guide import JunoGuide
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
-    
     CRISIS_KEYWORDS = [
         'suicide', 'kill myself', 'end it all', 'hurt myself', 'self harm',
         'cutting', 'die', 'worthless', 'want to die', 'better off dead',
         'no point living', 'hate myself', 'end my life'
     ]
-    
     def __init__(self):
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
-            raise ValueError("❌ OPENAI_API_KEY not found in .env file!")
+            raise ValueError("OPENAI_API_KEY not found in .env file!")
         
         self.client = OpenAI(api_key=api_key)
         self.voice = VoiceEngine()
