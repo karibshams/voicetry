@@ -1,4 +1,5 @@
 import openai
+from openai import OpenAI
 from textblob import TextBlob
 import json
 from datetime import datetime
@@ -18,7 +19,12 @@ class JunoAssistant:
         'no point living', 'hate myself', 'end my life']
     
     def __init__(self):
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        # Initialize OpenAI client (v1.x)
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("❌ OPENAI_API_KEY not found in .env file!")
+        
+        self.client = OpenAI(api_key=api_key)
         self.voice = VoiceEngine()
         self.prompts = Prompts()
         self.juno_guide = JunoGuide()
