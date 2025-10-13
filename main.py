@@ -8,6 +8,8 @@ from voice import VoiceEngine
 from prompt import Prompts
 from juno_guide import JunoGuide
 
+from dotenv import load_dotenv
+load_dotenv()
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
     
