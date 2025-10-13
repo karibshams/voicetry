@@ -90,7 +90,7 @@ class JunoAssistant:
     def _handle_guide(self, text: str, lang: str) -> dict:
         """Guide AI - App features"""
         
-        app_info = self.guide.search(text)
+        app_info = self.juno_guide.search(text)
         system_prompt = self.prompts.get('guide', lang)
         
         messages = [
@@ -98,8 +98,8 @@ class JunoAssistant:
             {'role': 'user', 'content': f"Question: {text}\n\nApp Info:\n{app_info}\n\nExplain using both app details and your AI knowledge."}
         ]
         
-        response = openai.ChatCompletion.create(
-            model='gpt-4.1-mini',
+        response = self.client.chat.completions.create(
+            model='gpt-4o-mini',
             messages=messages,
             max_tokens=180,
             temperature=0.7
