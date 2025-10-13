@@ -19,7 +19,7 @@ class JunoAssistant:
         'no point living', 'hate myself', 'end my life']
     
     def __init__(self):
-        # Initialize OpenAI client (v1.x)
+        
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
             raise ValueError("❌ OPENAI_API_KEY not found in .env file!")
@@ -36,7 +36,7 @@ class JunoAssistant:
         stt = self.voice.speech_to_text(audio_data)
         text = stt['text']
         lang = stt['language']
-        gender = stt['speaker_gender']
+        
 
         if not text:
             return self._error("I couldn't hear you clearly", lang)
