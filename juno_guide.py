@@ -1,296 +1,277 @@
-class JunoGuide:
-    """App feature knowledge base and guide AI system"""
-    
-    PAGE_GUIDES = {
-        'ProfilePage': {
-            'overview': 'Your personal profile with mood tracking, streaks, and check-in reminders',
-            'features': [
-                'Profile header with picture, name, and settings',
-                'About Me cards showing age, gender, country, occupation',
-                'My Progress card that navigates to Gamification page',
-                'Personal motivational quote display',
-                'This Week Mood Journey showing daily mood emojis (? for future days)',
-                'User streak tracking to celebrate consistency',
-                'Morning, afternoon, and evening check-in reminders with toggle on/off',
-                'Customize check-in schedule with time preferences'
-            ]
-        },
-        
-        'SubscriptionPage': {
-            'overview': 'Premium subscription plans to unlock full AI features',
-            'features': [
-                '3-day FREE trial with voice journaling, AI guidance, prayers, mood tracking, cloud storage',
-                'Monthly plan at $9.99/month with full access to all features',
-                'Annual plan at $79.99/year (saves 2 months) with lifetime cloud, habit tracking, biometric security',
-                'Easy subscription: pick a plan and tap the button to start',
-                'All plans include Juno AI guidance and meditation support'
-            ]
-        },
-        
-        'ChatbotPage': {
-            'overview': 'Chat with Juno - your AI wellness companion for journaling and support',
-            'features': [
-                'Voice journaling companion powered by AI',
-                'Chat interface with your messages (right side) and Juno replies (left with avatar)',
-                'Scrollable conversation history to review past chats',
-                'Text input field with send button',
-                'Automatic keyboard handling for smooth typing',
-                'Empty state with introduction and motivational prompts when starting'
-            ]
-        },
-        
-        'NotificationPage': {
-            'overview': 'Stay updated with wellness reminders and app notifications',
-            'features': [
-                'List of notifications with title, message, and time',
-                'Swipe to delete notifications you no longer need',
-                'Back navigation to return to previous screen'
-            ]
-        },
-        
-        'GamificationPage': {
-            'overview': 'Track your wellness journey with badges and achievements',
-            'features': [
-                'Display badges you have earned',
-                'Consistency percentage showing your dedication',
-                'Weekly progress bar chart visualization',
-                'Recent achievements with name, description, and icons',
-                'Locked status for achievements not yet unlocked',
-                'Create custom badges with name, goal, and privacy settings (Private/Public)'
-            ]
-        },
-        
-        'AccountPage': {
-            'overview': 'Manage your account settings and profile information',
-            'features': [
-                'View and edit profile picture (circular avatar)',
-                'Edit your user name',
-                'Edit your email address',
-                'Delete account option (use carefully)',
-                'Back navigation to return to previous screen'
-            ]
-        },
-        
-        'CreateJournalPage': {
-            'overview': 'Create new journal entries with feelings, voice, and photos',
-            'features': [
-                'Select your current feeling with emoji labels',
-                'Add journal title and content',
-                'Record voice notes with audio recorder',
-                'Add photos or images to your entry',
-                'Preview recorded audio before saving',
-                'Lock journal entry for privacy',
-                'Save journal entry to your collection',
-                'Back button to return to journal list'
-            ]
-        },
-        
-        'JournalPage': {
-            'overview': 'View and manage all your journal entries',
-            'features': [
-                'View journal entries filtered by selected date',
-                'Select date from current week to filter journals',
-                'Create new journal button for quick entry',
-                'Share journals via email or export as PDF',
-                'Delete journals with confirmation',
-                'Lock/unlock journal entries (locked cannot be edited or shared)',
-                'Shows "No journals found" if none exist for selected date',
-                'Uses Bloc for managing journal data and CRUD operations'
-            ]
-        },
-        
-        'VisualsPage': {
-            'overview': 'Relaxing visual content and videos for mindfulness',
-            'features': [
-                'Video player showing selected visual with title',
-                'Play/pause controls for videos',
-                'Scrollable grid of visuals (2 per row)',
-                'Thumbnails with play overlay icon',
-                'Blue border highlights selected visual',
-                'Tap visual to auto-select and update player',
-                'Easy visual selection with immediate feedback'
-            ]
-        },
-        
-        'AffirmationPage': {
-            'overview': 'Daily positive affirmations for motivation and mindset',
-            'features': [
-                'Daily affirmation with decorative emoji',
-                'Bold, italicized text for emphasis',
-                'Motivational subtext explaining affirmation purpose',
-                'Generate button to create new affirmation',
-                'Mark as Read button to acknowledge current affirmation',
-                'Centered card design for focused interaction'
-            ]
-        },
-        
-        'NowPlayingPage': {
-            'overview': 'Music player for therapy tracks with full controls',
-            'features': [
-                'Large centered album art with gradient and shadow',
-                'Track title and artist display',
-                'Favorite button to mark/unmark track',
-                'Add to playlist option',
-                'Play/Pause with prominent circular button',
-                'Skip to next/previous track',
-                'Shuffle and repeat buttons',
-                'Interactive progress bar with seek slider',
-                'Time indicators showing elapsed and total duration',
-                'Clean minimalistic design with soothing colors'
-            ]
-        },
-        
-        'MusicTherapyPage': {
-            'overview': 'Therapy music library with calming tracks for wellness',
-            'features': [
-                'Music library with therapy tracks',
-                'Category tabs: All, Favorites, Sleep, Alone, Focus',
-                'Music cards showing artwork, title, duration',
-                'Favorite toggle on each card',
-                'Tap card to go to Now Playing screen',
-                'Soothing light purple background',
-                'Rounded corners for soft visual effect',
-                'Grid layout for easy track scanning'
-            ]
-        },
-        
-        'GroundingPage': {
-            'overview': '5-4-3-2-1 grounding technique to reconnect with present moment',
-            'features': [
-                'Guided grounding exercise using 5 senses',
-                'Step 1: Name 5 things you can see',
-                'Step 2: Notice 4 things you can feel',
-                'Step 3: Identify 3 things you can hear',
-                'Step 4: Find 2 things you can smell',
-                'Step 5: Focus on 1 thing you can taste',
-                'Completion celebration with "Well done!" message',
-                'Horizontal category tabs with visual indicator'
-            ]
-        },
-        
-        'BreathingPage': {
-            'overview': 'Guided breathing exercises with animation and audio',
-            'features': [
-                'Central circular animation that expands (inhale) and contracts (exhale)',
-                'Circle changes color and opacity for breath phases',
-                'Text-to-speech audio guidance for breathing instructions',
-                'Timer showing elapsed/total duration in MM:SS format',
-                'Play/Pause button to control session',
-                'Stop/Exit button to end session',
-                'Animated microwave/wave icon for immersive feel',
-                'Clear "Breath In.." / "Breath Out.." instructions',
-                'Gradient background with calming UI'
-            ]
-        },
-        
-        'MindToolsPage': {
-            'overview': 'Collection of quick wellness tools for stress relief',
-            'features': [
-                'Breathing Timer: Sync breath with calming animations',
-                '5-4-3-2-1 Grounding: Sensory awareness exercise',
-                'Mirror Talk: Self-compassion and positive self-talk',
-                'Music Therapy: Curated relaxation music',
-                'Affirmations: Daily positive mindset encouragement',
-                'Visuals: Immersive exercises to relax and recenter',
-                'Interactive navigation to each tool page'
-            ]
-        },
-        
-        'FaithPage': {
-            'overview': 'Spiritual wellness with scripture, prayer, and affirmations',
-            'features': [
-                'Faith card prompting spiritual reflection',
-                'Daily scripture verse with reference',
-                'Audio icon for text-to-speech scripture playback',
-                'Guided voice prayer sessions with Start Session button',
-                'Session progress visual indicators',
-                'Daily affirmations for positive mindset',
-                'Generate new affirmations or Mark as Read buttons',
-                'Back navigation to previous screen'
-            ]
-        },
-        
-        'FeaturesPage': {
-            'overview': 'Overview of all main app features and tools',
-            'features': [
-                'Journal: Record thoughts, get AI insights, chat with coach',
-                'Faith: Track faith and wellness goals with motivation',
-                'Life Coach: Access crisis resources and guidance',
-                'Mind Tools: Quick interactive tools for stress reduction',
-                'Back navigation to previous screen'
-            ]
-        },
-        
-        'HomePage': {
-            'overview': 'Main dashboard with quick access to all wellness features',
-            'features': [
-                'User avatar and greeting text',
-                'Notification icon for alerts',
-                '"Silence Juno" toggle to mute/activate voice assistant',
-                'Feeling selector: Happy, Calm, Okay, Stressed, Angry',
-                'Daily scripture for reflection',
-                'Quick access shortcuts: Journal, Spiritual, Coach',
-                'Recommended section with music/meditation based on preferences',
-                'Daily wellness and mindfulness tips'
-            ]
-        }
-    }
-    
-    def get_page_info(self, query: str, lang: str = 'en') -> str:
-        """Find and return page information based on query"""
-        query_lower = query.lower()
+import openai
+from textblob import TextBlob
+import json
+from datetime import datetime
+import os
+from typing import List, Dict, Optional, Union
+from voice import VoiceEngine
+from prompt import Prompts
+from juno_guide import JunoGuide
 
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            page_key = page_name.lower().replace('page', '')
-            if page_key in query_lower:
-                features_text = '\n'.join([f"• {f}" for f in page_data['features']])
-                return f"{page_data['overview']}\n\n{features_text}"
-        
-        matching_features = []
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            for feature in page_data['features']:
-                if any(word in feature.lower() for word in query_lower.split() if len(word) > 3):
-                    matching_features.append(f"{page_name.replace('Page', '')}: {feature}")
-        
-        if matching_features:
-            return '\n'.join([f"• {f}" for f in matching_features[:5]])
-        
-        return None
+class JunoAssistant:
+    """Main AI orchestrator with dual AI and unlimited memory"""
     
-    def get_all_features_summary(self) -> str:
-        """Return summary of all app features"""
-        summary = []
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            summary.append(f"{page_name.replace('Page', '')}: {page_data['overview']}")
-        return '\n'.join(summary)
+    CRISIS_KEYWORDS = ['suicide', 'kill myself', 'end it all', 'hurt myself', 'self harm',
+        'cutting', 'die', 'worthless', 'want to die', 'better off dead',
+        'no point living', 'hate myself', 'end my life']
+    
+    def __init__(self):
+        openai.api_key = os.getenv('OPENAI_API_KEY')
+        self.voice = VoiceEngine()
+        self.prompts = Prompts()
+        self.juno_guide = JunoGuide()
+        self.memory = []
+        self.context = {'greeted': False}
+    
+    def process_voice(self, audio_data: bytes) -> dict:
+        """Main voice processing pipeline"""
+        stt = self.voice.speech_to_text(audio_data)
+        text = stt['text']
+        lang = stt['language']
+        gender = stt['speaker_gender']
+
+        if not text:
+            return self._error("I couldn't hear you clearly", lang)
+        
+        if self._is_crisis(text):
+            return self._handle_crisis(text, lang)
+        elif self._is_guide_query(text):
+            return self._handle_guide(text, lang)
+        else:
+            return self._handle_juno(text, lang)
+    
+    def _handle_juno(self, text: str, lang: str) -> dict:
+        """Main Juno AI - Wellness conversations"""
+        
+        sentiment = self._get_sentiment(text)
+        system_prompt = self.prompts.get('juno', lang)
+        messages = [{'role': 'system', 'content': system_prompt}]
+
+        if self.memory and not self.context['greeted']:
+            last = self.memory[-1]['user'][:80]
+            messages.append({'role': 'system', 'content': f"Returning user. Last talked about: {last}"})
+            self.context['greeted'] = True
+        
+        for m in self.memory:
+            messages.append({'role': 'user', 'content': m['user']})
+            messages.append({'role': 'assistant', 'content': m['assistant']})
+        
+        messages.append({'role': 'user', 'content': text})
+        
+        response = openai.ChatCompletion.create(
+            model='gpt-4.1-mini',
+            messages=messages,
+            max_tokens=250,
+            temperature=0.8
+        )
+        
+        reply = response.choices[0].message.content
+        audio = self.voice.text_to_speech(reply, lang, 'female')
+        
+        self._save_memory(text, reply, sentiment, lang, 'juno')
+        
+        return {
+            'type': 'juno',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
+            'mood': sentiment['mood'],
+            'lang': lang
+        }
+    
+    def _handle_guide(self, text: str, lang: str) -> dict:
+        """Guide AI - App features"""
+        
+        app_info = self.guide.search(text)
+        system_prompt = self.prompts.get('guide', lang)
+        
+        messages = [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': f"Question: {text}\n\nApp Info:\n{app_info}\n\nExplain using both app details and your AI knowledge."}
+        ]
+        
+        response = openai.ChatCompletion.create(
+            model='gpt-4.1-mini',
+            messages=messages,
+            max_tokens=180,
+            temperature=0.7
+        )
+        
+        reply = response.choices[0].message.content
+        audio = self.voice.text_to_speech(reply, lang, 'female')
+        
+        self._save_memory(text, f"[Guide] {reply}", {'mood': 'neutral'}, lang, 'guide')
+        
+        return {
+            'type': 'guide',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
+            'mood': 'neutral',
+            'lang': lang
+        }
+    
+    def _handle_crisis(self, text: str, lang: str) -> dict:
+        """Crisis response"""
+        
+        reply = self.prompts.get('crisis', lang)
+        audio = self.voice.text_to_speech(reply, lang, 'female')
+        
+        self._save_memory(text, f"[Crisis] {reply}", {'mood': 'crisis'}, lang, 'crisis')
+        
+        return {
+            'type': 'crisis',
+            'text': text,
+            'reply': reply,
+            'audio': audio,
+            'mood': 'crisis',
+            'lang': lang,
+            'crisis': True
+        }
+    
+    def _is_crisis(self, text: str) -> bool:
+        """Check for crisis keywords"""
+        return any(k in text.lower() for k in self.CRISIS_KEYWORDS)
+    
+    def _is_guide_query(self, text: str) -> bool:
+        """Check if asking about app features"""
+        keywords = ['how do i', 'how to', 'what is', 'explain', 'tell me about', 
+                   'subscription', 'profile', 'journal', 'page', 'feature']
+        return any(k in text.lower() for k in keywords)
+    
+    def _get_sentiment(self, text: str) -> dict:
+        """Analyze sentiment"""
+        blob = TextBlob(text)
+        p = blob.sentiment.polarity
+        
+        if p > 0.3: mood = 'happy'
+        elif p > 0: mood = 'calm'
+        elif p > -0.3: mood = 'neutral'
+        elif p > -0.6: mood = 'sad'
+        else: mood = 'anxious'
+        
+        return {'mood': mood, 'polarity': p}
+    
+    def _save_memory(self, user: str, assistant: str, sentiment: dict, lang: str, ai_type: str):
+        """Store in unlimited memory"""
+        self.memory.append({
+            'timestamp': datetime.now().isoformat(),
+            'user': user,
+            'assistant': assistant,
+            'sentiment': sentiment,
+            'lang': lang,
+            'ai_type': ai_type
+        })
+    
+    def _error(self, msg: str, lang: str) -> dict:
+        """Error response"""
+        audio = self.voice.text_to_speech(msg, lang, 'female')
+        return {'type': 'error', 'reply': msg, 'audio': audio, 'lang': lang}
+    
+    def save_memory(self, filepath: str = 'juno_memory.json'):
+        """Save memory to file"""
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump({'memory': self.memory, 'context': self.context}, f, indent=2)
+        print(f"✅ Saved {len(self.memory)} conversations")
+    
+    def load_memory(self, filepath: str = 'juno_memory.json'):
+        """Load memory from file"""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self.memory = data.get('memory', [])
+                self.context = data.get('context', {'greeted': False})
+            print(f"✅ Loaded {len(self.memory)} conversations")
+        except FileNotFoundError:
+            print("⚠️  No memory file found")
+    
+    def get_stats(self) -> dict:
+        """Get memory statistics"""
+        return {
+            'total': len(self.memory),
+            'moods': [m['sentiment']['mood'] for m in self.memory if 'sentiment' in m],
+            'languages': list(set(m['lang'] for m in self.memory)),
+            'ai_types': list(set(m['ai_type'] for m in self.memory))
+        }
 
 
 # ==========================================
-# INTERACTIVE CHAT for juno_guide.py
+# TEST CODE
 # ==========================================
 if __name__ == "__main__":
     print("=" * 50)
-    print("💬 Welcome to Juno Guide Chat")
+    print("🧠 Juno Assistant System Tester")
     print("=" * 50)
-    
-    try:
-        guide = JunoGuide()
-        print(f"✅ JunoGuide initialized with {len(guide.PAGE_GUIDES)} pages\n")
-        print("Type your question below — or type 'exit' to quit.\n")
+    print("\nSelect what you want to test:")
+    print("1. Initialize System")
+    print("2. Test Sentiment Analysis")
+    print("3. Test Query Routing")
+    print("4. Test Memory Storage")
+    print("5. Test System Stats")
+    print("6. Test Memory Save/Load")
+    print("7. Run All Tests")
+    print("0. Exit")
 
-        while True:
-            user_input = input("🧍 You: ").strip()
-            if user_input.lower() in ["exit", "quit", "bye"]:
-                print("\n👋 Exiting Juno Guide Chat. Take care!\n")
-                break
-            
-            response = guide.get_page_info(user_input)
-            
-            if response:
-                print(f"🤖 Juno Guide: {response}\n")
-            else:
-                print("🤖 Juno Guide: Sorry, I couldn’t find info about that yet.\n")
-    
+    choice = input("\n👉 Enter your choice (0–7): ").strip()
+
+    try:
+        juno = None
+
+        if choice == "0":
+            print("\n👋 Exiting...")
+            exit()
+
+        if choice in ["1", "2", "3", "4", "5", "6", "7"]:
+            print("\n1. Initializing...")
+            juno = JunoAssistant()
+            print("✅ All modules connected")
+
+        if choice in ["2", "7"]:
+            print("\n2. Testing sentiment...")
+            test_texts = ["I'm so happy!", "I feel anxious", "Just okay"]
+            for t in test_texts:
+                s = juno._get_sentiment(t)
+                print(f"✅ '{t}' → {s['mood']}")
+
+        if choice in ["3", "7"]:
+            print("\n3. Testing AI routing...")
+            queries = [
+                ("I'm feeling sad", "juno"),
+                ("How do I use journal?", "guide"),
+                ("I want to hurt myself", "crisis")
+            ]
+            for q, expected in queries:
+                if juno._is_crisis(q):
+                    route = "crisis"
+                elif juno._is_guide_query(q):
+                    route = "guide"
+                else:
+                    route = "juno"
+
+                status = "✅" if route == expected else "❌"
+                print(f"{status} '{q}' → {route}")
+
+        if choice in ["4", "7"]:
+            print("\n4. Testing memory...")
+            juno._save_memory("Test message", "Test reply", {'mood': 'happy'}, 'en', 'juno')
+            print(f"✅ Memory: {len(juno.memory)} conversations")
+
+        if choice in ["5", "7"]:
+            print("\n5. Testing stats...")
+            stats = juno.get_stats()
+            print(f"✅ Stats: {stats}")
+
+        if choice in ["6", "7"]:
+            print("\n6. Testing memory save/load...")
+            juno.save_memory('test_memory.json')
+            new_juno = JunoAssistant()
+            new_juno.load_memory('test_memory.json')
+            print(f"✅ Restored {len(new_juno.memory)} conversations")
+
+        print("\n" + "=" * 50)
+        print("✅ Test Complete")
+        print("=" * 50)
+
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
         import traceback
