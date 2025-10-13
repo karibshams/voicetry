@@ -239,15 +239,13 @@ class JunoGuide:
     def get_page_info(self, query: str, lang: str = 'en') -> str:
         """Find and return page information based on query"""
         query_lower = query.lower()
-        
-        # Search for exact page match
+
         for page_name, page_data in self.PAGE_GUIDES.items():
             page_key = page_name.lower().replace('page', '')
             if page_key in query_lower:
                 features_text = '\n'.join([f"• {f}" for f in page_data['features']])
                 return f"{page_data['overview']}\n\n{features_text}"
         
-        # Search in features
         matching_features = []
         for page_name, page_data in self.PAGE_GUIDES.items():
             for feature in page_data['features']:
