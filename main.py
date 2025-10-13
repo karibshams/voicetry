@@ -66,8 +66,8 @@ class JunoAssistant:
         
         messages.append({'role': 'user', 'content': text})
         
-        response = openai.ChatCompletion.create(
-            model='gpt-4.1-mini',
+        response = self.client.chat.completions.create(
+            model='gpt-4o-mini',
             messages=messages,
             max_tokens=250,
             temperature=0.8
