@@ -180,7 +180,7 @@ class JunoAssistant:
         """Save memory to file"""
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump({'memory': self.memory, 'context': self.context}, f, indent=2)
-        print(f"✅ Saved {len(self.memory)} conversations")
+        print(f"Saved {len(self.memory)} conversations")
     
     def load_memory(self, filepath: str = 'juno_memory.json'):
         """Load memory from file"""
@@ -189,9 +189,9 @@ class JunoAssistant:
                 data = json.load(f)
                 self.memory = data.get('memory', [])
                 self.context = data.get('context', {'greeted': False})
-            print(f"✅ Loaded {len(self.memory)} conversations")
+            print(f"Loaded {len(self.memory)} conversations")
         except FileNotFoundError:
-            print("⚠️  No memory file found")
+            print("No memory file found")
     
     def get_stats(self) -> dict:
         """Get memory statistics"""
