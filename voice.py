@@ -66,8 +66,11 @@ class VoiceEngine:
             
             audio_config = texttospeech.AudioConfig(
                 audio_encoding=texttospeech.AudioEncoding.MP3,
-                speaking_rate=0.95
+                speaking_rate =0.95, 
             )
+            
+
+
             
             response = self.tts_client.synthesize_speech(
                 input=texttospeech.SynthesisInput(text=text),
