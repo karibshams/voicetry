@@ -1,3 +1,4 @@
+# prompt.py
 class Prompts:
     """Centralized AI prompts for Juno and Guide AI"""
     

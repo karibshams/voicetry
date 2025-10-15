@@ -1,3 +1,4 @@
+#juno_guide.py
 class JunoGuide:
     """App feature knowledge base and guide AI system"""
     
