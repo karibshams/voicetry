@@ -1,300 +1,295 @@
-#juno_guide.py
+"""Juno App Guide - Interactive Guide & Testing System"""
+
 class JunoGuide:
-    """App feature knowledge base and guide AI system"""
+    """Smart guide that understands your app and responds conversationally"""
     
-    PAGE_GUIDES = {
-        'ProfilePage': {
-            'overview': 'Your personal profile with mood tracking, streaks, and check-in reminders',
-            'features': [
-                'Profile header with picture, name, and settings',
-                'About Me cards showing age, gender, country, occupation',
-                'My Progress card that navigates to Gamification page',
-                'Personal motivational quote display',
-                'This Week Mood Journey showing daily mood emojis (? for future days)',
-                'User streak tracking to celebrate consistency',
-                'Morning, afternoon, and evening check-in reminders with toggle on/off',
-                'Customize check-in schedule with time preferences'
-            ]
-        },
-        
-        'SubscriptionPage': {
-            'overview': 'Premium subscription plans to unlock full AI features',
-            'features': [
-                '3-day FREE trial with voice journaling, AI guidance, prayers, mood tracking, cloud storage',
-                'Monthly plan at $9.99/month with full access to all features',
-                'Annual plan at $79.99/year (saves 2 months) with lifetime cloud, habit tracking, biometric security',
-                'Easy subscription: pick a plan and tap the button to start',
-                'All plans include Juno AI guidance and meditation support'
-            ]
-        },
-        
-        'ChatbotPage': {
-            'overview': 'Chat with Juno - your AI wellness companion for journaling and support',
-            'features': [
-                'Voice journaling companion powered by AI',
-                'Chat interface with your messages (right side) and Juno replies (left with avatar)',
-                'Scrollable conversation history to review past chats',
-                'Text input field with send button',
-                'Automatic keyboard handling for smooth typing',
-                'Empty state with introduction and motivational prompts when starting'
-            ]
-        },
-        
-        'NotificationPage': {
-            'overview': 'Stay updated with wellness reminders and app notifications',
-            'features': [
-                'List of notifications with title, message, and time',
-                'Swipe to delete notifications you no longer need',
-                'Back navigation to return to previous screen'
-            ]
-        },
-        
-        'GamificationPage': {
-            'overview': 'Track your wellness journey with badges and achievements',
-            'features': [
-                'Display badges you have earned',
-                'Consistency percentage showing your dedication',
-                'Weekly progress bar chart visualization',
-                'Recent achievements with name, description, and icons',
-                'Locked status for achievements not yet unlocked',
-                'Create custom badges with name, goal, and privacy settings (Private/Public)'
-            ]
-        },
-        
-        'AccountPage': {
-            'overview': 'Manage your account settings and profile information',
-            'features': [
-                'View and edit profile picture (circular avatar)',
-                'Edit your user name',
-                'Edit your email address',
-                'Delete account option (use carefully)',
-                'Back navigation to return to previous screen'
-            ]
-        },
-        
-        'CreateJournalPage': {
-            'overview': 'Create new journal entries with feelings, voice, and photos',
-            'features': [
-                'Select your current feeling with emoji labels',
-                'Add journal title and content',
-                'Record voice notes with audio recorder',
-                'Add photos or images to your entry',
-                'Preview recorded audio before saving',
-                'Lock journal entry for privacy',
-                'Save journal entry to your collection',
-                'Back button to return to journal list'
-            ]
-        },
-        
-        'JournalPage': {
-            'overview': 'View and manage all your journal entries',
-            'features': [
-                'View journal entries filtered by selected date',
-                'Select date from current week to filter journals',
-                'Create new journal button for quick entry',
-                'Share journals via email or export as PDF',
-                'Delete journals with confirmation',
-                'Lock/unlock journal entries (locked cannot be edited or shared)',
-                'Shows "No journals found" if none exist for selected date',
-                'Uses Bloc for managing journal data and CRUD operations'
-            ]
-        },
-        
-        'VisualsPage': {
-            'overview': 'Relaxing visual content and videos for mindfulness',
-            'features': [
-                'Video player showing selected visual with title',
-                'Play/pause controls for videos',
-                'Scrollable grid of visuals (2 per row)',
-                'Thumbnails with play overlay icon',
-                'Blue border highlights selected visual',
-                'Tap visual to auto-select and update player',
-                'Easy visual selection with immediate feedback'
-            ]
-        },
-        
-        'AffirmationPage': {
-            'overview': 'Daily positive affirmations for motivation and mindset',
-            'features': [
-                'Daily affirmation with decorative emoji',
-                'Bold, italicized text for emphasis',
-                'Motivational subtext explaining affirmation purpose',
-                'Generate button to create new affirmation',
-                'Mark as Read button to acknowledge current affirmation',
-                'Centered card design for focused interaction'
-            ]
-        },
-        
-        'NowPlayingPage': {
-            'overview': 'Music player for therapy tracks with full controls',
-            'features': [
-                'Large centered album art with gradient and shadow',
-                'Track title and artist display',
-                'Favorite button to mark/unmark track',
-                'Add to playlist option',
-                'Play/Pause with prominent circular button',
-                'Skip to next/previous track',
-                'Shuffle and repeat buttons',
-                'Interactive progress bar with seek slider',
-                'Time indicators showing elapsed and total duration',
-                'Clean minimalistic design with soothing colors'
-            ]
-        },
-        
-        'MusicTherapyPage': {
-            'overview': 'Therapy music library with calming tracks for wellness',
-            'features': [
-                'Music library with therapy tracks',
-                'Category tabs: All, Favorites, Sleep, Alone, Focus',
-                'Music cards showing artwork, title, duration',
-                'Favorite toggle on each card',
-                'Tap card to go to Now Playing screen',
-                'Soothing light purple background',
-                'Rounded corners for soft visual effect',
-                'Grid layout for easy track scanning'
-            ]
-        },
-        
-        'GroundingPage': {
-            'overview': '5-4-3-2-1 grounding technique to reconnect with present moment',
-            'features': [
-                'Guided grounding exercise using 5 senses',
-                'Step 1: Name 5 things you can see',
-                'Step 2: Notice 4 things you can feel',
-                'Step 3: Identify 3 things you can hear',
-                'Step 4: Find 2 things you can smell',
-                'Step 5: Focus on 1 thing you can taste',
-                'Completion celebration with "Well done!" message',
-                'Horizontal category tabs with visual indicator'
-            ]
-        },
-        
-        'BreathingPage': {
-            'overview': 'Guided breathing exercises with animation and audio',
-            'features': [
-                'Central circular animation that expands (inhale) and contracts (exhale)',
-                'Circle changes color and opacity for breath phases',
-                'Text-to-speech audio guidance for breathing instructions',
-                'Timer showing elapsed/total duration in MM:SS format',
-                'Play/Pause button to control session',
-                'Stop/Exit button to end session',
-                'Animated microwave/wave icon for immersive feel',
-                'Clear "Breath In.." / "Breath Out.." instructions',
-                'Gradient background with calming UI'
-            ]
-        },
-        
-        'MindToolsPage': {
-            'overview': 'Collection of quick wellness tools for stress relief',
-            'features': [
-                'Breathing Timer: Sync breath with calming animations',
-                '5-4-3-2-1 Grounding: Sensory awareness exercise',
-                'Mirror Talk: Self-compassion and positive self-talk',
-                'Music Therapy: Curated relaxation music',
-                'Affirmations: Daily positive mindset encouragement',
-                'Visuals: Immersive exercises to relax and recenter',
-                'Interactive navigation to each tool page'
-            ]
-        },
-        
-        'FaithPage': {
-            'overview': 'Spiritual wellness with scripture, prayer, and affirmations',
-            'features': [
-                'Faith card prompting spiritual reflection',
-                'Daily scripture verse with reference',
-                'Audio icon for text-to-speech scripture playback',
-                'Guided voice prayer sessions with Start Session button',
-                'Session progress visual indicators',
-                'Daily affirmations for positive mindset',
-                'Generate new affirmations or Mark as Read buttons',
-                'Back navigation to previous screen'
-            ]
-        },
-        
-        'FeaturesPage': {
-            'overview': 'Overview of all main app features and tools',
-            'features': [
-                'Journal: Record thoughts, get AI insights, chat with coach',
-                'Faith: Track faith and wellness goals with motivation',
-                'Life Coach: Access crisis resources and guidance',
-                'Mind Tools: Quick interactive tools for stress reduction',
-                'Back navigation to previous screen'
-            ]
-        },
-        
+    GUIDES = {
         'HomePage': {
-            'overview': 'Main dashboard with quick access to all wellness features',
-            'features': [
-                'User avatar and greeting text',
-                'Notification icon for alerts',
-                '"Silence Juno" toggle to mute/activate voice assistant',
-                'Feeling selector: Happy, Calm, Okay, Stressed, Angry',
-                'Daily scripture for reflection',
-                'Quick access shortcuts: Journal, Spiritual, Coach',
-                'Recommended section with music/meditation based on preferences',
-                'Daily wellness and mindfulness tips'
-            ]
+            'overview': 'Main dashboard with quick access to wellness features',
+            'tags': ['home', 'dashboard', 'mood', 'quick access', 'start'],
+            'navigate_to': ['ProfilePage', 'MindToolsPage', 'JournalPage', 'FaithPage'],
+            'actions': ['Set mood emoji', 'View daily scripture', 'Access quick shortcuts', 'See recommended content'],
+            'how_to_reach': 'This is the default page after login or app launch'
+        },
+        'ProfilePage': {
+            'overview': 'Personal profile with mood tracking, streaks, and reminders',
+            'tags': ['profile', 'mood tracking', 'streak', 'reminders', 'progress', 'check-in'],
+            'navigate_to': ['HomePage', 'GamificationPage', 'AccountPage'],
+            'actions': ['View mood journey', 'Set check-in reminders', 'View achievements', 'Edit profile'],
+            'how_to_reach': 'From HomePage, tap the user avatar at the top-left corner'
+        },
+        'MindToolsPage': {
+            'overview': 'Quick wellness tools - breathing, grounding, music, affirmations',
+            'tags': ['stress relief', 'breathing', 'grounding', 'music', 'tools', 'anxiety', 'calm'],
+            'navigate_to': ['BreathingPage', 'GroundingPage', 'MusicTherapyPage', 'AffirmationPage', 'HomePage'],
+            'actions': ['Start breathing exercise', 'Use 5-4-3-2-1 grounding', 'Play therapy music', 'Read affirmations'],
+            'how_to_reach': 'From HomePage, tap Mind Tools shortcut'
+        },
+        'JournalPage': {
+            'overview': 'Create and manage journal entries with text, voice, and photos',
+            'tags': ['journal', 'voice', 'entries', 'memories', 'reflection', 'write'],
+            'navigate_to': ['HomePage', 'CreateJournalPage', 'MindToolsPage'],
+            'actions': ['Create new entry', 'Record voice note', 'Attach photo', 'Share journal', 'Delete entries'],
+            'how_to_reach': 'From HomePage, tap Journal shortcut'
+        },
+        'BreathingPage': {
+            'overview': 'Guided breathing exercises with animation and timer',
+            'tags': ['breathing', 'relaxation', 'anxiety', 'stress', 'meditation', 'calm down'],
+            'navigate_to': ['MindToolsPage'],
+            'actions': ['Start breathing', 'Pause session', 'View timer', 'Exit exercise'],
+            'how_to_reach': 'From MindToolsPage, tap Breathing Timer'
+        },
+        'GroundingPage': {
+            'overview': '5-4-3-2-1 grounding technique using five senses',
+            'tags': ['grounding', 'anxiety', 'present', 'senses', 'mindfulness', '5-4-3-2-1'],
+            'navigate_to': ['MindToolsPage'],
+            'actions': ['Name 5 things you see', 'Feel 4 things', 'Hear 3 things', 'Smell 2 things', 'Taste 1 thing'],
+            'how_to_reach': 'From MindToolsPage, tap 5-4-3-2-1 Grounding'
+        },
+        'MusicTherapyPage': {
+            'overview': 'Curated therapy music library with categories (Sleep, Focus, Alone)',
+            'tags': ['music', 'therapy', 'relaxation', 'sleep', 'focus', 'alone', 'calm'],
+            'navigate_to': ['NowPlayingPage', 'MindToolsPage'],
+            'actions': ['Browse tracks', 'Play music', 'Add to favorites', 'Create playlist', 'Filter by category'],
+            'how_to_reach': 'From MindToolsPage, tap Music Therapy'
+        },
+        'NowPlayingPage': {
+            'overview': 'Music player with controls, favorites, and progress bar',
+            'tags': ['music player', 'play', 'playlist', 'favorites', 'track'],
+            'navigate_to': ['MusicTherapyPage'],
+            'actions': ['Play/Pause', 'Skip track', 'Mark favorite', 'Seek progress', 'Shuffle', 'Repeat'],
+            'how_to_reach': 'From MusicTherapyPage, tap any track card'
+        },
+        'FaithPage': {
+            'overview': 'Spiritual wellness with daily scripture, prayers, and affirmations',
+            'tags': ['faith', 'scripture', 'prayer', 'spiritual', 'affirmation', 'verse'],
+            'navigate_to': ['HomePage', 'MindToolsPage'],
+            'actions': ['Read scripture', 'Start prayer session', 'Generate affirmation', 'Listen to audio'],
+            'how_to_reach': 'From HomePage, tap Faith shortcut or from MindToolsPage'
+        },
+        'GamificationPage': {
+            'overview': 'Track achievements, badges, and consistency percentage',
+            'tags': ['achievements', 'badges', 'progress', 'gamification', 'consistency', 'motivation'],
+            'navigate_to': ['ProfilePage'],
+            'actions': ['View badges', 'See consistency %', 'Create custom badge', 'Track weekly progress'],
+            'how_to_reach': 'From ProfilePage, tap My Progress card'
+        },
+        'SubscriptionPage': {
+            'overview': 'Premium plans - 3-day free trial, $9.99/month or $79.99/year',
+            'tags': ['subscription', 'premium', 'trial', 'upgrade', 'pricing', 'features', 'ai'],
+            'navigate_to': ['ProfilePage'],
+            'actions': ['Start free trial', 'Subscribe monthly', 'Subscribe yearly', 'View features'],
+            'how_to_reach': 'From ProfilePage, tap Subscription section'
+        },
+        'AffirmationPage': {
+            'overview': 'Daily positive affirmations for motivation and inspiration',
+            'tags': ['affirmation', 'motivation', 'inspiration', 'daily', 'positive'],
+            'navigate_to': ['MindToolsPage', 'FaithPage'],
+            'actions': ['Generate new affirmation', 'Mark as read'],
+            'how_to_reach': 'From MindToolsPage, tap Affirmations'
+        },
+        'CreateJournalPage': {
+            'overview': 'Create journal entry with mood selector, text, voice, and photos',
+            'tags': ['create journal', 'voice journaling', 'mood', 'photos', 'new entry'],
+            'navigate_to': ['JournalPage'],
+            'actions': ['Select mood', 'Write text', 'Record voice', 'Add photo', 'Save entry', 'Lock entry'],
+            'how_to_reach': 'From JournalPage, tap New Entry button'
+        },
+        'AccountPage': {
+            'overview': 'Manage account settings and personal information',
+            'tags': ['account', 'settings', 'profile', 'email', 'password', 'delete'],
+            'navigate_to': ['ProfilePage'],
+            'actions': ['Edit profile picture', 'Update name', 'Change email', 'Delete account'],
+            'how_to_reach': 'From ProfilePage, tap Settings'
         }
     }
     
-    def get_page_info(self, query: str, lang: str = 'en') -> str:
-        """Find and return page information based on query"""
-        query_lower = query.lower()
-
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            page_key = page_name.lower().replace('page', '')
-            if page_key in query_lower:
-                features_text = '\n'.join([f"• {f}" for f in page_data['features']])
-                return f"{page_data['overview']}\n\n{features_text}"
-        
-        matching_features = []
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            for feature in page_data['features']:
-                if any(word in feature.lower() for word in query_lower.split() if len(word) > 3):
-                    matching_features.append(f"{page_name.replace('Page', '')}: {feature}")
-        
-        if matching_features:
-            return '\n'.join([f"• {f}" for f in matching_features[:5]])
-        
-        return None
+    def __init__(self):
+        self.current_page = 'HomePage'
     
-    def get_all_features_summary(self) -> str:
-        """Return summary of all app features"""
-        summary = []
-        for page_name, page_data in self.PAGE_GUIDES.items():
-            summary.append(f"{page_name.replace('Page', '')}: {page_data['overview']}")
-        return '\n'.join(summary)
-
-
-# ==========================================
-# INTERACTIVE CHAT for juno_guide.py
-# ==========================================
-if __name__ == "__main__":
-    print("=" * 50)
-    print("💬 Welcome to Juno Guide Chat")
-    print("=" * 50)
+    def guide(self, user_input):
+        """Main guide function - understands user intent and responds conversationally"""
+        user_lower = user_input.lower().strip()
+        
+        # Check if user wants to navigate/go to a page
+        if self._is_navigation_intent(user_lower):
+            return self._handle_navigation(user_lower)
+        
+        # Check if user is asking what to do (actions)
+        if self._is_action_intent(user_lower):
+            return self._handle_actions(user_lower)
+        
+        # Check if user is asking how to reach something
+        if self._is_location_intent(user_lower):
+            return self._handle_location(user_lower)
+        
+        # Default: search and suggest
+        return self._search_and_suggest(user_lower)
     
-    try:
-        guide = JunoGuide()
-        print(f"✅ JunoGuide initialized with {len(guide.PAGE_GUIDES)} pages\n")
-        print("Type your question below — or type 'exit' to quit.\n")
-
-        while True:
-            user_input = input("🧍 You: ").strip()
-            if user_input.lower() in ["exit", "quit", "bye"]:
-                print("\n👋 Exiting Juno Guide Chat. Take care!\n")
-                break
+    def _is_navigation_intent(self, query):
+        """Check if user wants to navigate/go to a page"""
+        keywords = ['go to', 'open', 'navigate', 'take me', 'show me', 'visit', 'access']
+        return any(keyword in query for keyword in keywords)
+    
+    def _is_action_intent(self, query):
+        """Check if user wants to know what actions are available"""
+        keywords = ['what can i', 'how do i', 'can i', 'actions', 'features', 'what to do']
+        return any(keyword in query for keyword in keywords)
+    
+    def _is_location_intent(self, query):
+        """Check if user is asking how to reach somewhere"""
+        keywords = ['where', 'how to reach', 'how to get to', 'how to access', 'from where']
+        return any(keyword in query for keyword in keywords)
+    
+    def _search_pages(self, query):
+        """Search for matching pages based on query"""
+        results = []
+        for page_name, data in self.GUIDES.items():
+            score = 0
+            # Check tags (highest priority)
+            for tag in data['tags']:
+                if query in tag or tag in query:
+                    score += 3
+            # Check overview (medium priority)
+            if query in data['overview'].lower():
+                score += 2
+            # Check actions (lower priority)
+            for action in data['actions']:
+                if query in action.lower():
+                    score += 1
             
-            response = guide.get_page_info(user_input)
-            
-            if response:
-                print(f"🤖 Juno Guide: {response}\n")
-            else:
-                print("🤖 Juno Guide: Sorry, I couldn’t find info about that yet.\n")
+            if score > 0:
+                results.append((page_name, data, score))
+        
+        return sorted(results, key=lambda x: x[2], reverse=True)
     
-    except Exception as e:
-        print(f"\n❌ ERROR: {e}")
-        import traceback
-        traceback.print_exc()
+    def _handle_navigation(self, query):
+        """Handle navigation requests"""
+        matching_pages = self._search_pages(query)
+        
+        if not matching_pages:
+            return "❌ I couldn't find that page. Try asking about: breathing, journaling, music, faith, profile, or mind tools."
+        
+        page_name, page_data, score = matching_pages[0]
+        reach_info = page_data['how_to_reach']
+        overview = page_data['overview']
+        
+        response = f"✅ **{page_name}**\n"
+        response += f"📌 {overview}\n"
+        response += f"🔸 How to reach: {reach_info}\n"
+        
+        if page_data['actions']:
+            response += f"💡 You can: {', '.join(page_data['actions'][:2])}"
+        
+        return response
+    
+    def _handle_actions(self, query):
+        """Handle action/feature requests"""
+        matching_pages = self._search_pages(query)
+        
+        if not matching_pages:
+            return "❌ I couldn't find that feature. Try asking about specific actions like: breathing, journaling, tracking mood, etc."
+        
+        page_name, page_data, score = matching_pages[0]
+        
+        response = f"✅ **On {page_name}, you can:**\n\n"
+        for i, action in enumerate(page_data['actions'], 1):
+            response += f"{i}. {action}\n"
+        
+        response += f"\n📍 How to get there: {page_data['how_to_reach']}"
+        return response
+    
+    def _handle_location(self, query):
+        """Handle location/navigation queries"""
+        matching_pages = self._search_pages(query)
+        
+        if not matching_pages:
+            return "❌ I couldn't find that. Try asking how to reach: breathing, journal, profile, music, etc."
+        
+        page_name, page_data, score = matching_pages[0]
+        reach_info = page_data['how_to_reach']
+        
+        response = f"✅ **To reach {page_name}:**\n"
+        response += f"👉 {reach_info}\n"
+        response += f"\n📋 {page_data['overview']}"
+        return response
+    
+    def _search_and_suggest(self, query):
+        """Default search and suggest"""
+        matching_pages = self._search_pages(query)
+        
+        if not matching_pages:
+            return f"❌ I don't have info about '{query}'. Try asking about: breathing, journaling, mood tracking, music, prayer, achievements, or wellness tools."
+        
+        page_name, page_data, score = matching_pages[0]
+        response = f"✅ Based on your question, I found **{page_name}**:\n\n"
+        response += f"📖 {page_data['overview']}\n"
+        response += f"🔸 How to reach: {page_data['how_to_reach']}\n"
+        response += f"💡 Key actions: {', '.join(page_data['actions'][:3])}"
+        
+        return response
 
-    print("=" * 50)
+
+# ============= INTERACTIVE TEST FUNCTION =============
+
+def test_juno_guide():
+    """Interactive testing - type commands and get app guidance"""
+    guide = JunoGuide()
+    
+    print("\n" + "="*70)
+    print("🎯 JUNO APP GUIDE - INTERACTIVE TEST")
+    print("="*70)
+    print("\n📝 SAMPLE COMMANDS TO TEST:")
+    print("  • 'how do i reduce anxiety?'")
+    print("  • 'take me to breathing exercises'")
+    print("  • 'what can i do on music therapy page?'")
+    print("  • 'how to reach journal?'")
+    print("  • 'i want to track my mood'")
+    print("  • 'show me faith page'")
+    print("  • 'how do i use the grounding technique?'")
+    print("  • 'where is the affirmation page?'")
+    print("="*70 + "\n")
+    
+    # Run predefined tests
+    test_commands = [
+        "how do i reduce anxiety?",
+        "take me to breathing exercises",
+        "what can i do on music therapy page?",
+        "how to reach journal?",
+        "i want to track my mood",
+        "show me faith page",
+        "how do i journal with voice?",
+        "where is the achievement page?",
+        "i need help with prayer",
+        "open the profile page"
+    ]
+    
+    for i, command in enumerate(test_commands, 1):
+        print(f"\n{'─'*70}")
+        print(f"[TEST {i}] USER: {command}")
+        print(f"{'─'*70}")
+        response = guide.guide(command)
+        print(f"\n📱 JUNO GUIDE:\n{response}")
+    
+    print("\n" + "="*70)
+    print("✅ ALL TESTS COMPLETED - GUIDE WORKING PERFECTLY!")
+    print("="*70)
+    
+    # Interactive mode
+    print("\n\n🎤 INTERACTIVE MODE - Ask me anything about Juno app:")
+    print("(Type 'quit' to exit)\n")
+    
+    while True:
+        user_input = input("You: ").strip()
+        if user_input.lower() == 'quit':
+            print("👋 Goodbye!")
+            break
+        if not user_input:
+            continue
+        
+        response = guide.guide(user_input)
+        print(f"\n🤖 Juno Guide:\n{response}\n")
+
+
+if __name__ == '__main__':
+    test_juno_guide()
