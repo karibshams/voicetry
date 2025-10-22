@@ -9,10 +9,10 @@ class VoiceEngine:
     """Google Cloud Speech-to-Text and Text-to-Speech handler"""
     
     def __init__(self):
-        creds_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+        creds_path = os.getenv('ELEVENLABS_API_KEY')
         if not creds_path or not os.path.exists(creds_path):
             raise ValueError(
-                "GOOGLE_APPLICATION_CREDENTIALS not found or file doesn't exist! "
+                "ELEVENLABS_API_KEY not found or file doesn't exist! "
                 "Check your .env file."
             )
         
