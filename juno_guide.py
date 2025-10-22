@@ -110,20 +110,16 @@ class JunoGuide:
     def guide(self, user_input):
         """Main guide function - understands user intent and responds conversationally"""
         user_lower = user_input.lower().strip()
-        
-        # Check if user wants to navigate/go to a page
+
         if self._is_navigation_intent(user_lower):
             return self._handle_navigation(user_lower)
-        
-        # Check if user is asking what to do (actions)
+
         if self._is_action_intent(user_lower):
             return self._handle_actions(user_lower)
         
-        # Check if user is asking how to reach something
         if self._is_location_intent(user_lower):
             return self._handle_location(user_lower)
         
-        # Default: search and suggest
         return self._search_and_suggest(user_lower)
     
     def _is_navigation_intent(self, query):
@@ -146,14 +142,12 @@ class JunoGuide:
         results = []
         for page_name, data in self.GUIDES.items():
             score = 0
-            # Check tags (highest priority)
             for tag in data['tags']:
                 if query in tag or tag in query:
                     score += 3
-            # Check overview (medium priority)
             if query in data['overview'].lower():
                 score += 2
-            # Check actions (lower priority)
+        
             for action in data['actions']:
                 if query in action.lower():
                     score += 1
@@ -174,12 +168,12 @@ class JunoGuide:
         reach_info = page_data['how_to_reach']
         overview = page_data['overview']
         
-        response = f"✅ **{page_name}**\n"
-        response += f"📌 {overview}\n"
+        response = f"**{page_name}**\n"
+        response += f" {overview}\n"
         response += f"🔸 How to reach: {reach_info}\n"
         
         if page_data['actions']:
-            response += f"💡 You can: {', '.join(page_data['actions'][:2])}"
+            response += f" You can: {', '.join(page_data['actions'][:2])}"
         
         return response
     
@@ -188,15 +182,15 @@ class JunoGuide:
         matching_pages = self._search_pages(query)
         
         if not matching_pages:
-            return "❌ I couldn't find that feature. Try asking about specific actions like: breathing, journaling, tracking mood, etc."
+            return " I couldn't find that feature. Try asking about specific actions like: breathing, journaling, tracking mood, etc."
         
         page_name, page_data, score = matching_pages[0]
         
-        response = f"✅ **On {page_name}, you can:**\n\n"
+        response = f" **On {page_name}, you can:**\n\n"
         for i, action in enumerate(page_data['actions'], 1):
             response += f"{i}. {action}\n"
         
-        response += f"\n📍 How to get there: {page_data['how_to_reach']}"
+        response += f"\n How to get there: {page_data['how_to_reach']}"
         return response
     
     def _handle_location(self, query):
@@ -204,14 +198,14 @@ class JunoGuide:
         matching_pages = self._search_pages(query)
         
         if not matching_pages:
-            return "❌ I couldn't find that. Try asking how to reach: breathing, journal, profile, music, etc."
+            return " I couldn't find that. Try asking how to reach: breathing, journal, profile, music, etc."
         
         page_name, page_data, score = matching_pages[0]
         reach_info = page_data['how_to_reach']
         
-        response = f"✅ **To reach {page_name}:**\n"
-        response += f"👉 {reach_info}\n"
-        response += f"\n📋 {page_data['overview']}"
+        response = f" **To reach {page_name}:**\n"
+        response += f" {reach_info}\n"
+        response += f"\n{page_data['overview']}"
         return response
     
     def _search_and_suggest(self, query):
@@ -219,13 +213,13 @@ class JunoGuide:
         matching_pages = self._search_pages(query)
         
         if not matching_pages:
-            return f"❌ I don't have info about '{query}'. Try asking about: breathing, journaling, mood tracking, music, prayer, achievements, or wellness tools."
+            return f" I don't have info about '{query}'. Try asking about: breathing, journaling, mood tracking, music, prayer, achievements, or wellness tools."
         
         page_name, page_data, score = matching_pages[0]
-        response = f"✅ Based on your question, I found **{page_name}**:\n\n"
-        response += f"📖 {page_data['overview']}\n"
-        response += f"🔸 How to reach: {page_data['how_to_reach']}\n"
-        response += f"💡 Key actions: {', '.join(page_data['actions'][:3])}"
+        response = f" Based on your question, I found **{page_name}**:\n\n"
+        response += f" {page_data['overview']}\n"
+        response += f" How to reach: {page_data['how_to_reach']}\n"
+        response += f" Key actions: {', '.join(page_data['actions'][:3])}"
         
         return response
 
