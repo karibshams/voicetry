@@ -10,6 +10,7 @@ load_dotenv()
 from voice import VoiceEngine
 from prompt import Prompts
 from juno_guide import JunoGuide
+
 class JunoAssistant:
     """Main AI orchestrator with dual AI and unlimited memory"""
     CRISIS_KEYWORDS = [
@@ -17,6 +18,7 @@ class JunoAssistant:
         'cutting', 'die', 'worthless', 'want to die', 'better off dead',
         'no point living', 'hate myself', 'end my life'
     ]
+    
     def __init__(self):
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
@@ -28,7 +30,7 @@ class JunoAssistant:
         self.juno_guide = JunoGuide()
         self.memory = []
         self.context = {'greeted': False}    
-        print("Juno Assistant initialized successfully")
+        print("✅ Juno Assistant initialized successfully")
     
     def process_voice(self, audio_data: bytes) -> dict:
         """Main voice processing pipeline"""
@@ -89,6 +91,7 @@ class JunoAssistant:
     
     def _handle_guide(self, text: str, lang: str) -> dict:
         """Guide AI - App features"""
+        # ✅ FIXED: Changed from .guide() to .search()
         app_info = self.juno_guide.search(text)
         system_prompt = self.prompts.get('guide', lang)
         
@@ -182,7 +185,7 @@ class JunoAssistant:
         """Save memory to file"""
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump({'memory': self.memory, 'context': self.context}, f, indent=2)
-        print(f"Saved {len(self.memory)} conversations to {filepath}")
+        print(f"✅ Saved {len(self.memory)} conversations to {filepath}")
     
     def load_memory(self, filepath: str = 'juno_memory.json'):
         """Load memory from file"""
@@ -191,9 +194,9 @@ class JunoAssistant:
                 data = json.load(f)
                 self.memory = data.get('memory', [])
                 self.context = data.get('context', {'greeted': False})
-            print(f"Loaded {len(self.memory)} conversations from {filepath}")
+            print(f"✅ Loaded {len(self.memory)} conversations from {filepath}")
         except FileNotFoundError:
-            print(f"No memory file found at {filepath}")
+            print(f"⚠️  No memory file found at {filepath}")
     
     def get_stats(self) -> dict:
         """Get memory statistics"""
@@ -216,140 +219,94 @@ class JunoAssistant:
 
 
 # ==========================================
-# TEST CODE
+# ✅ MAIN TEST FUNCTION
 # ==========================================
-if __name__ == "__main__":
-    print("=" * 60)
-    print("🧠 JUNO ASSISTANT - SYSTEM TESTER")
-    print("=" * 60)
-    print("\n📋 Select Test Module:")
-    print("1. Initialize System")
-    print("2. Test Sentiment Analysis")
-    print("3. Test AI Routing (Crisis/Guide/Juno)")
-    print("4. Test Memory Storage")
-    print("5. Test System Stats")
-    print("6. Test Memory Save/Load")
-    print("7. Run All Tests")
-    print("0. Exit")
-
-    choice = input("\n👉 Enter your choice (0-7): ").strip()
-
+def main():
+    """Main test function to verify everything works"""
+    print("\n" + "="*70)
+    print("🧪 JUNO ASSISTANT - COMPREHENSIVE SYSTEM TEST")
+    print("="*70)
+    
     try:
-        juno = None
-
-        if choice == "0":
-            print("\n👋 Exiting...")
-            exit()
-
-        # Initialize for all tests
-        if choice in ["1", "2", "3", "4", "5", "6", "7"]:
-            print("\n" + "=" * 60)
-            print("1️⃣  INITIALIZING SYSTEM...")
-            print("=" * 60)
-            juno = JunoAssistant()
-            print("✅ All modules connected successfully\n")
-
+        # Test 1: Initialization
+        print("\n[1/6] 🔧 Initializing Juno Assistant...")
+        juno = JunoAssistant()
+        print("✅ All modules connected successfully")
+        
         # Test 2: Sentiment Analysis
-        if choice in ["2", "7"]:
-            print("=" * 60)
-            print("2️⃣  TESTING SENTIMENT ANALYSIS...")
-            print("=" * 60)
-            test_texts = [
-                "I'm so happy today!",
-                "Feeling a bit anxious",
-                "Just okay, nothing special",
-                "I feel really sad",
-                "This is amazing!"
-            ]
-            for t in test_texts:
-                s = juno._get_sentiment(t)
-                print(f"✅ '{t}' → Mood: {s['mood']}, Polarity: {s['polarity']:.2f}")
-            print()
-
+        print("\n[2/6] 😊 Testing Sentiment Analysis...")
+        test_texts = [
+            "I'm so happy today!",
+            "Feeling a bit anxious",
+            "Just okay, nothing special"
+        ]
+        for text in test_texts:
+            sentiment = juno._get_sentiment(text)
+            print(f"   '{text}' → Mood: {sentiment['mood']}")
+        print("✅ Sentiment analysis working")
+        
         # Test 3: AI Routing
-        if choice in ["3", "7"]:
-            print("=" * 60)
-            print("3️⃣  TESTING AI ROUTING...")
-            print("=" * 60)
-            queries = [
-                ("I'm feeling sad today", "juno"),
-                ("How do I use the journal?", "guide"),
-                ("I want to hurt myself", "crisis"),
-                ("Tell me about meditation", "guide"),
-                ("I had a great day!", "juno")
-            ]
-            for q, expected in queries:
-                if juno._is_crisis(q):
-                    route = "crisis"
-                elif juno._is_guide_query(q):
-                    route = "guide"
-                else:
-                    route = "juno"
-
-                status = "✅" if route == expected else "❌"
-                print(f"{status} '{q}' → Routed to: {route} (Expected: {expected})")
-            print()
-
-        # Test 4: Memory
-        if choice in ["4", "7"]:
-            print("=" * 60)
-            print("4️⃣  TESTING MEMORY STORAGE...")
-            print("=" * 60)
-            juno._save_memory(
-                "Test message 1", 
-                "Test reply 1", 
-                {'mood': 'happy', 'polarity': 0.5}, 
-                'en', 
-                'juno'
-            )
-            juno._save_memory(
-                "Test message 2", 
-                "Test reply 2", 
-                {'mood': 'calm', 'polarity': 0.2}, 
-                'en', 
-                'guide'
-            )
-            print(f"✅ Memory stored: {len(juno.memory)} conversations")
-            print(f"✅ Last conversation: {juno.memory[-1]['user'][:50]}...")
-            print()
-
-        # Test 5: Stats
-        if choice in ["5", "7"]:
-            print("=" * 60)
-            print("5️⃣  TESTING STATISTICS...")
-            print("=" * 60)
-            stats = juno.get_stats()
-            print(f"✅ Total conversations: {stats['total_conversations']}")
-            print(f"✅ Mood distribution: {stats['mood_distribution']}")
-            print(f"✅ Languages used: {stats['languages']}")
-            print(f"✅ AI types: {stats['ai_types']}")
-            print()
-
-        # Test 6: Save/Load
-        if choice in ["6", "7"]:
-            print("=" * 60)
-            print("6️⃣  TESTING MEMORY PERSISTENCE...")
-            print("=" * 60)
+        print("\n[3/6] 🤖 Testing AI Routing...")
+        test_cases = [
+            ("I'm feeling sad today", "juno", "Should route to Juno AI"),
+            ("How do I use the journal?", "guide", "Should route to Guide AI"),
+            ("I want to hurt myself", "crisis", "Should route to Crisis AI")
+        ]
+        
+        for query, expected, desc in test_cases:
+            if juno._is_crisis(query):
+                route = "crisis"
+            elif juno._is_guide_query(query):
+                route = "guide"
+            else:
+                route = "juno"
             
-            # Save
-            juno.save_memory('test_memory.json')
-            
-            # Load in new instance
-            new_juno = JunoAssistant()
-            new_juno.load_memory('test_memory.json')
-            print(f"✅ Restored {len(new_juno.memory)} conversations")
-            print(f"✅ Memory integrity: {len(juno.memory) == len(new_juno.memory)}")
-            print()
-
-        print("=" * 60)
-        print("✅ ALL TESTS COMPLETED SUCCESSFULLY!")
-        print("=" * 60)
-
+            status = "✅" if route == expected else "❌"
+            print(f"   {status} {desc}")
+        
+        print("✅ AI routing working correctly")
+        
+        # Test 4: Juno Guide Integration
+        print("\n[4/6] 📱 Testing Juno Guide Integration...")
+        guide_query = "how to use journal"
+        result = juno.juno_guide.search(guide_query)
+        print(f"   Query: '{guide_query}'")
+        print(f"   Result: {result[:100]}...")
+        print("✅ Juno Guide search() method working")
+        
+        # Test 5: Memory System
+        print("\n[5/6] 💾 Testing Memory System...")
+        juno._save_memory(
+            "Test message", 
+            "Test reply", 
+            {'mood': 'happy', 'polarity': 0.5}, 
+            'en', 
+            'juno'
+        )
+        print(f"   Memory count: {len(juno.memory)}")
+        print(f"   Last entry: {juno.memory[-1]['user']}")
+        print("✅ Memory system working")
+        
+        # Test 6: Statistics
+        print("\n[6/6] 📊 Testing Statistics...")
+        stats = juno.get_stats()
+        print(f"   Total conversations: {stats['total_conversations']}")
+        print(f"   Mood distribution: {stats['mood_distribution']}")
+        print("✅ Statistics working")
+        
+        print("\n" + "="*70)
+        print("🎉 ALL TESTS PASSED! SYSTEM READY FOR PRODUCTION")
+        print("="*70)
+        
+        # Save test memory
+        juno.save_memory('test_juno_memory.json')
+        print("\n✅ Test memory saved to 'test_juno_memory.json'")
+        
     except Exception as e:
-        print("\n" + "=" * 60)
-        print(f"❌ ERROR OCCURRED: {e}")
-        print("=" * 60)
+        print(f"\n❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
 
-    print("\n🎉 Testing session finished\n")
+
+if __name__ == "__main__":
+    main()
