@@ -27,22 +27,3 @@ class Prompts:
         return prompts.get(lang, prompts['en'])
 
 
-# ==========================================
-# TEST CODE
-# ==========================================
-if __name__ == "__main__":
-    print("=" * 50)
-    print("Testing Prompts")
-    print("=" * 50)
-    
-    try:
-        for ai_type in ['juno', 'guide', 'crisis']:
-            for lang in ['en', 'hi', 'pt']:
-                prompt = Prompts.get(ai_type, lang)
-                print(f"✅ {ai_type.upper()} ({lang}): {len(prompt)} chars")
-        
-        print("\n✅ ALL TESTS PASSED")
-    except Exception as e:
-        print(f"❌ ERROR: {e}")
-    
-    print("=" * 50)
