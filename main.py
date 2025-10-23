@@ -32,8 +32,17 @@ class JunoAssistant:
         self.context = {'greeted': False}    
         print("✅ Juno Assistant initialized successfully")
     
-    def process_voice(self, audio_data: bytes) -> dict:
-        """Main voice processing pipeline"""
+    def process_voice(self, audio_data: bytes, context: str = 'juno') -> dict:
+        """
+        Main voice processing pipeline with context awareness
+        
+        Args:
+            audio_data: Audio bytes from user
+            context: 'juno' (default), 'coach', or 'journal'
+        
+        Returns:
+            dict: Response with text, audio, mood, etc.
+        """
         stt = self.voice.speech_to_text(audio_data)
         text = stt['text']
         lang = stt['language']
@@ -41,12 +50,14 @@ class JunoAssistant:
         if not text:
             return self._error("I couldn't hear you clearly", lang)
         
+        # Priority routing
         if self._is_crisis(text):
             return self._handle_crisis(text, lang)
         elif self._is_guide_query(text):
             return self._handle_guide(text, lang)
         else:
-            return self._handle_juno(text, lang)
+            # Context-aware AI (juno, coach, or journal)
+            return self._handle_contextual(text, lang, context)
     
     def _handle_juno(self, text: str, lang: str) -> dict:
         """Main Juno AI - Wellness conversations"""
@@ -91,7 +102,6 @@ class JunoAssistant:
     
     def _handle_guide(self, text: str, lang: str) -> dict:
         """Guide AI - App features"""
-        # ✅ FIXED: Changed from .guide() to .search()
         app_info = self.juno_guide.search(text)
         system_prompt = self.prompts.get('guide', lang)
         
@@ -219,7 +229,7 @@ class JunoAssistant:
 
 
 # ==========================================
-# ✅ MAIN TEST FUNCTION
+# MAIN TEST FUNCTION
 # ==========================================
 def main():
     """Main test function to verify everything works"""
