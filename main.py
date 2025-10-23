@@ -1,4 +1,3 @@
-#main.py
 from openai import OpenAI
 from textblob import TextBlob
 import json
@@ -30,7 +29,7 @@ class JunoAssistant:
         self.juno_guide = JunoGuide()
         self.memory = []
         self.context = {'greeted': False}    
-        print("✅ Juno Assistant initialized successfully")
+        print(" Juno Assistant initialized successfully")
     
     def process_voice(self, audio_data: bytes, context: str = 'juno') -> dict:
         """
@@ -50,13 +49,12 @@ class JunoAssistant:
         if not text:
             return self._error("I couldn't hear you clearly", lang)
         
-        # Priority routing
         if self._is_crisis(text):
             return self._handle_crisis(text, lang)
         elif self._is_guide_query(text):
             return self._handle_guide(text, lang)
         else:
-            # Context-aware AI (juno, coach, or journal)
+
             return self._handle_contextual(text, lang, context)
     
     def _handle_juno(self, text: str, lang: str) -> dict:
@@ -195,7 +193,7 @@ class JunoAssistant:
         """Save memory to file"""
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump({'memory': self.memory, 'context': self.context}, f, indent=2)
-        print(f"✅ Saved {len(self.memory)} conversations to {filepath}")
+        print(f"Saved {len(self.memory)} conversations to {filepath}")
     
     def load_memory(self, filepath: str = 'juno_memory.json'):
         """Load memory from file"""
@@ -204,9 +202,9 @@ class JunoAssistant:
                 data = json.load(f)
                 self.memory = data.get('memory', [])
                 self.context = data.get('context', {'greeted': False})
-            print(f"✅ Loaded {len(self.memory)} conversations from {filepath}")
+            print(f"Loaded {len(self.memory)} conversations from {filepath}")
         except FileNotFoundError:
-            print(f"⚠️  No memory file found at {filepath}")
+            print(f" No memory file found at {filepath}")
     
     def get_stats(self) -> dict:
         """Get memory statistics"""
