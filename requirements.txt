@@ -1,13 +1,6 @@
-# AI Services
 openai
-
-# Sentiment Analysis
 textblob
-
-# Environment Variables
 python-dotenv
 requests
 pyaudio
 wave
-soundfile
-sounddevice
