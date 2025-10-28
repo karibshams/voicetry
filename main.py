@@ -305,9 +305,9 @@ class JunoAssistant:
                 data = json.load(f)
                 self.memory = data.get('memory', [])
                 self.context = data.get('context', {'greeted': False, 'spiritual_tier': 1})
-            print(f"✅ Loaded {len(self.memory)} conversations from {filepath}")
+            print(f"Loaded {len(self.memory)} conversations from {filepath}")
         except FileNotFoundError:
-            print(f"ℹ️ No memory file found at {filepath}")
+            print(f"ℹNo memory file found at {filepath}")
     
     def get_stats(self) -> dict:
         """Get memory statistics"""
