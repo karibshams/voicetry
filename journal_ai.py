@@ -145,7 +145,7 @@ class JournalAI:
             'text': therapist_reply
         })
 
-        if not self.diagnosis_done or self.questions_asked < 10:
+        if not self.diagnosis_done or self.questions_asked < 9:
             self.questions_asked += 1
 
         return therapist_reply
