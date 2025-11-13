@@ -175,40 +175,131 @@ class JournalAI:
         print("✅ Memory cleared - Ready for new patient")
 
 
+import pyaudio
+import wave
+from io import BytesIO
+from journal_ai import JournalAI
+
+def record_live_audio(duration: int = 5) -> bytes:
+    """Record live audio from microphone"""
+    print(f"🎤 Recording... (speak now, {duration}s)")
+    
+    CHUNK = 1024
+    FORMAT = 8
+    CHANNELS = 1
+    RATE = 16000
+    
+    p = pyaudio.PyAudio()
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    
+    frames = []
+    for _ in range(0, int(RATE / CHUNK * duration)):
+        data = stream.read(CHUNK)
+        frames.append(data)
+    
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    
+    audio_bytes = b''.join(frames)
+    return audio_bytes
+
+def play_audio(audio_bytes: bytes):
+    """Play audio response"""
+    if not audio_bytes:
+        return
+    
+    print("🔊 Playing response...")
+    
+    CHUNK = 1024
+    p = pyaudio.PyAudio()
+    
+    stream = p.open(format=8, channels=1, rate=16000, output=True)
+    stream.write(audio_bytes)
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
 def main():
-    """Test JournalAI with text input"""
+    """Test JournalAI - STT, TTS, and Text modes"""
     therapist = JournalAI()
     
-    print("\n🏥 JournalAI Therapist - Test Mode")
-    print("=" * 50)
-    print("Type 'exit' to quit | 'memory' to see history\n")
+    print("\n🏥 JournalAI Therapist - Live Test")
+    print("=" * 60)
+    print("Modes:")
+    print("  'stt'    - Live voice input + TTS response")
+    print("  'tts'    - Text input + TTS response")
+    print("  'text'   - Text input + text response")
+    print("  'memory' - View conversation history")
+    print("  'exit'   - Quit\n")
     
     while True:
         try:
-            patient_input = input("👤 You: ").strip()
+            mode = input("👤 Choose (stt/tts/text/memory/exit): ").strip().lower()
             
-            if patient_input.lower() == 'exit':
+            if mode == 'exit':
                 print("👋 Goodbye!")
                 break
             
-            if patient_input.lower() == 'memory':
+            if mode == 'memory':
                 print("\n📋 Conversation Memory:")
-                for msg in therapist.get_memory():
-                    print(f"{msg['role'].upper()}: {msg['text']}\n")
+                if not therapist.get_memory():
+                    print("  (empty)")
+                else:
+                    for msg in therapist.get_memory():
+                        print(f"  {msg['role'].upper()}: {msg['text']}\n")
                 continue
             
-            if not patient_input:
-                continue
+            # STT + TTS Mode (Live Voice)
+            if mode == 'stt':
+                audio_bytes = record_live_audio(duration=5)
+                print("🔄 Processing voice...")
+                
+                result = therapist.process_voice(audio_bytes, language='en', gender='female')
+                print(f"\n📝 You said: {result['patient_input']}")
+                print(f"🤖 Dr. Sarah: {result['response']}")
+                print(f"📊 Questions: {result['questions_asked']} | Diagnosis: {result['diagnosis_done']}\n")
+                
+                play_audio(result['audio'])
+                print("✅ Done\n")
             
-            # Process text input
-            result = therapist.process_text(patient_input, language='en')
+            # TTS Mode (Text input + Voice response)
+            elif mode == 'tts':
+                patient_input = input("👤 Your message: ").strip()
+                if not patient_input:
+                    print("❌ Empty input!\n")
+                    continue
+                
+                result = therapist.process_text(patient_input, language='en')
+                print(f"\n🤖 Dr. Sarah: {result['response']}")
+                print(f"📊 Questions: {result['questions_asked']} | Diagnosis: {result['diagnosis_done']}\n")
+                
+                # Generate TTS for response
+                from voice import VoiceEngine
+                voice = VoiceEngine()
+                audio = voice.text_to_speech(result['response'], 'en', 'female')
+                play_audio(audio)
+                print("✅ Done\n")
             
-            print(f"\n🤖 Dr. juno: {result['response']}")
-            print(f"📊 Questions asked: {result['questions_asked']} | Diagnosis done: {result['diagnosis_done']}\n")
+            # Text Mode (Text input + Text response)
+            elif mode == 'text':
+                patient_input = input("👤 Your message: ").strip()
+                if not patient_input:
+                    print("❌ Empty input!\n")
+                    continue
+                
+                result = therapist.process_text(patient_input, language='en')
+                print(f"\n🤖 Dr. Sarah: {result['response']}")
+                print(f"📊 Questions: {result['questions_asked']} | Diagnosis: {result['diagnosis_done']}\n")
+            
+            else:
+                print("❌ Invalid command!\n")
         
         except KeyboardInterrupt:
             print("\n\n👋 Session ended!")
             break
+        except Exception as e:
+            print(f"❌ Error: {e}\n")
 
 if __name__ == "__main__":
     main()
