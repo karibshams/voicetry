@@ -162,7 +162,7 @@ class JunoGuide:
         matching_pages = self._search_pages(query)
         
         if not matching_pages:
-            return "❌ I couldn't find that page. Try asking about: breathing, journaling, music, faith, profile, or mind tools."
+            return "I couldn't find that page. Try asking about: breathing, journaling, music, faith, profile, or mind tools."
         
         page_name, page_data, score = matching_pages[0]
         reach_info = page_data['how_to_reach']
