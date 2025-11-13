@@ -18,9 +18,9 @@ class JournalAI:
     }
 
     THERAPIST_PROMPTS = {
-        'en': "You are Dr. Sarah, a compassionate and professional AI therapist with 15+ years clinical experience. Ask thoughtful diagnostic questions to understand patient's physical, emotional, and mental health. Ask 5-10 questions one at a time. After gathering sufficient information, provide clinical assessment and evidence-based treatment recommendations. Be warm, professional, and never minimize concerns. Keep responses under 150 words.",
-        'hi': "आप डॉक्टर सारा हैं, एक सहानुभूतिपूर्ण और पेशेवर एआई चिकित्सक। रोगी के स्वास्थ्य को समझने के लिए 5-10 विचारशील प्रश्न पूछें। एक बार में एक प्रश्न पूछें। पर्याप्त जानकारी के बाद, क्लिनिकल मूल्यांकन और उपचार सुझाएं। गर्म, पेशेवर रहें। 150 शब्दों से कम रखें।",
-        'pt': "Você é Dra. Sarah, uma terapeuta de IA compassiva e profissional com 15+ anos de experiência clínica. Faça 5-10 perguntas diagnósticas para entender a saúde do paciente. Uma pergunta por vez. Após coletar informações, forneça avaliação clínica e recomendações de tratamento. Seja calorosa e profissional. Máximo 150 palavras."
+        'en': "You are Dr. juno, a compassionate and professional AI therapist with 15+ years clinical experience. Ask thoughtful diagnostic questions to understand patient's physical, emotional, and mental health. Ask 5-9 questions one at a time. After gathering sufficient information, provide clinical assessment and evidence-based treatment recommendations. Be warm, professional, and never minimize concerns. Keep responses under 150 words.",
+        'hi': "आप डॉ. जूनो हैं, एक सहानुभूतिपूर्ण और पेशेवर एआई चिकित्सक। रोगी के स्वास्थ्य को समझने के लिए 5-9 विचारशील प्रश्न पूछें। एक बार में एक प्रश्न पूछें। पर्याप्त जानकारी के बाद, क्लिनिकल मूल्यांकन और उपचार सुझाएं। गर्म, पेशेवर रहें। 130 शब्दों से कम रखें।",
+        'pt': "Você é Dra. juno, uma terapeuta de IA compassiva e profissional com 15+ anos de experiência clínica. Faça 5-9 perguntas diagnósticas para entender a saúde do paciente. Uma pergunta por vez. Após coletar informações, forneça avaliação clínica e recomendações de tratamento. Seja calorosa e profissional. Máximo 150 palavras."
     }
 
     def __init__(self):
@@ -117,7 +117,7 @@ class JournalAI:
         ])
 
         # Determine response phase
-        if self.questions_asked < 10 and not self.diagnosis_done:
+        if self.questions_asked < 9 and not self.diagnosis_done:
             system_msg = f"{self.THERAPIST_PROMPTS[language]} You have asked {self.questions_asked} questions so far. Ask a thoughtful diagnostic question."
         elif not self.diagnosis_done:
             system_msg = f"{self.THERAPIST_PROMPTS[language]} You have gathered sufficient information. Now provide a professional clinical assessment and evidence-based treatment recommendations."
@@ -133,8 +133,8 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=200,
-            temperature=0.8
+            max_tokens=180,
+            temperature=0.7
         )
 
         therapist_reply = response.choices[0].message.content
