@@ -203,7 +203,7 @@ def main():
             # Process text input
             result = therapist.process_text(patient_input, language='en')
             
-            print(f"\n🤖 Dr. Sarah: {result['response']}")
+            print(f"\n🤖 Dr. juno: {result['response']}")
             print(f"📊 Questions asked: {result['questions_asked']} | Diagnosis done: {result['diagnosis_done']}\n")
         
         except KeyboardInterrupt:
