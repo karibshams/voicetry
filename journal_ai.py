@@ -175,3 +175,53 @@ class JournalAI:
         print("✅ Memory cleared - Ready for new patient")
 
 
+from journal_ai import JournalAI
+
+
+def main():
+    """Simple main function to test JournalAI"""
+    
+    print("=" * 50)
+    print("JournalAI - AI Therapist")
+    print("=" * 50)
+    
+    # Initialize therapist
+    therapist = JournalAI()
+    
+    # Get language choice
+    print("\nSelect Language:")
+    print("1. English (en)")
+    print("2. Hindi (hi)")
+    print("3. Portuguese (pt)")
+    lang_choice = input("Enter choice (1-3): ").strip()
+    
+    lang_map = {'1': 'en', '2': 'hi', '3': 'pt'}
+    language = lang_map.get(lang_choice, 'en')
+    
+    print(f"\n✅ Language: {language}")
+    print("Start typing your messages (type 'quit' to exit)\n")
+    print("-" * 50)
+    
+    # Conversation loop
+    while True:
+        # Get patient input
+        patient_input = input("\n👤 You: ").strip()
+        
+        if patient_input.lower() in ['quit', 'exit', 'q']:
+            print("\n👋 Thank you for using JournalAI. Take care!")
+            break
+        
+        if not patient_input:
+            continue
+        
+        # Process and get response
+        response = therapist.process_text(patient_input, language=language)
+        
+        # Display response
+        print(f"\n🤖 Therapist: {response['response']}")
+        print(f"\n📊 Status - Questions: {response['questions_asked']}/9 | Diagnosis: {response['diagnosis_done']}")
+        print("-" * 50)
+
+
+if __name__ == "__main__":
+    main()
