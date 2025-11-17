@@ -175,7 +175,7 @@ class JournalAI:
         print("✅ Memory cleared - Ready for new patient")
 
 
-from journal_ai import JournalAI
+
 
 
 def main():
