@@ -1,7 +1,7 @@
 """Juno App Guide - Interactive Guide & Testing System"""
 
 class JunoGuide:
-    """Smart guide that understands your app and responds conversationally"""
+    """Smart guide that understands your app and responds conversationally"""  
     
     GUIDES = {
         'HomePage': {
