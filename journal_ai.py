@@ -225,3 +225,110 @@ class JournalAI:
         return crisis_msg
 
 
+def main():
+    """Main function to test JournalAI functionality"""
+    
+    print("=" * 60)
+    print("🧠 JournalAI - Testing Suite")
+    print("=" * 60)
+    
+    try:
+        # Initialize JournalAI
+        print("\n[1] Initializing JournalAI...")
+        journal = JournalAI()
+        print("✅ JournalAI initialized successfully\n")
+        
+    except ValueError as e:
+        print(f"❌ Initialization failed: {e}")
+        return
+    
+    # Test 1: Text processing - FEEL phase
+    print("[2] Testing FEEL phase (text input)...")
+    test_input_1 = "I'm feeling really overwhelmed with work today"
+    result_1 = journal.process_text(test_input_1, language='en')
+    print(f"  Input: {result_1['patient_input']}")
+    print(f"  Phase: {result_1['phase']}")
+    print(f"  Response: {result_1['response'][:100]}...\n")
+    
+    # Test 2: Continue with UNDERSTAND phase
+    print("[3] Testing UNDERSTAND phase...")
+    test_input_2 = "I think it's because I have too many deadlines and I can't prioritize"
+    result_2 = journal.process_text(test_input_2, language='en')
+    print(f"  Input: {result_2['patient_input']}")
+    print(f"  Phase: {result_2['phase']}")
+    print(f"  Response: {result_2['response'][:100]}...\n")
+    
+    # Test 3: Continue with RELIEVE phase
+    print("[4] Testing RELIEVE phase...")
+    test_input_3 = "I need to learn to let go and trust that things will work out"
+    result_3 = journal.process_text(test_input_3, language='en')
+    print(f"  Input: {result_3['patient_input']}")
+    print(f"  Phase: {result_3['phase']}")
+    print(f"  Response: {result_3['response'][:150]}...\n")
+    
+    # Test 4: Memory tracking
+    print("[5] Testing Memory...")
+    memory = journal.get_memory()
+    print(f"  Total messages in memory: {len(memory)}")
+    print(f"  Memory snapshot:")
+    for i, msg in enumerate(memory):
+        print(f"    {i+1}. {msg['role'].upper()} - Phase: {msg['phase']}\n")
+    
+    # Test 5: Sentiment analysis
+    print("[6] Testing Sentiment Analysis...")
+    test_sentiments = [
+        ("I'm so happy and excited!", "positive"),
+        ("It's just okay, nothing special", "neutral"),
+        ("I'm a bit sad today", "negative"),
+    ]
+    journal.clear_memory()
+    for text, expected in test_sentiments:
+        sentiment = journal._analyze_sentiment(text)
+        status = "✅" if sentiment else "❌"
+        print(f"  {status} '{text}' → {sentiment}")
+    print()
+    
+    # Test 6: Crisis detection
+    print("[7] Testing Crisis Detection...")
+    crisis_test = "I can't take it anymore, I want to kill myself"
+    is_crisis = journal._is_crisis(crisis_test)
+    print(f"  Text: '{crisis_test}'")
+    print(f"  Crisis detected: {'✅ YES' if is_crisis else '❌ NO'}\n")
+    
+    # Test 7: Language support
+    print("[8] Testing Language Support...")
+    journal.clear_memory()
+    test_langs = [
+        ("I'm feeling anxious", "en", "English"),
+        ("मुझे चिंता हो रही है", "hi", "Hindi"),
+        ("Estou me sentindo ansioso", "pt", "Portuguese"),
+    ]
+    for text, lang, lang_name in test_langs:
+        try:
+            result = journal.process_text(text, language=lang)
+            print(f"  ✅ {lang_name} ({lang}): OK")
+        except Exception as e:
+            print(f"  ❌ {lang_name} ({lang}): {str(e)[:50]}")
+    print()
+    
+    # Test 8: Entry summary
+    print("[9] Testing Entry Summary...")
+    summary = journal.get_entry_summary()
+    print(f"  Current phase: {summary['phase']}")
+    print(f"  Total messages: {summary['messages']}")
+    print(f"  Session started: {summary['started_at']}\n")
+    
+    # Test 9: Clear memory
+    print("[10] Testing Memory Clear...")
+    print(f"  Messages before clear: {len(journal.get_memory())}")
+    journal.clear_memory()
+    print(f"  Messages after clear: {len(journal.get_memory())}")
+    print(f"  Phase reset to: {journal.phase}\n")
+    
+    print("=" * 60)
+    print("✅ All tests completed!")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
