@@ -199,3 +199,57 @@ class JournalAI:
         return crisis_msg
 
 
+def main():
+    """Simple main function for live chat with JournalAI"""
+    
+    print("\n" + "="*60)
+    print("🧠 JournalAI - FEEL → UNDERSTAND → RELIEVE")
+    print("="*60)
+    print("Type 'quit' to exit | 'clear' to start new session | 'lang' to change language\n")
+    
+    try:
+        journal = JournalAI()
+    except ValueError as e:
+        print(f"❌ Error: {e}")
+        return
+    
+    language = 'en'
+    
+    while True:
+        try:
+            user_input = input(f"You ({journal.phase.upper()}): ").strip()
+            
+            if user_input.lower() == 'quit':
+                print("\n👋 Thank you for sharing. Take care!\n")
+                break
+            
+            if user_input.lower() == 'clear':
+                journal.clear_memory()
+                print("🔄 Memory cleared - New session started!\n")
+                continue
+            
+            if user_input.lower() == 'lang':
+                print("Available languages: en (English), hi (Hindi), pt (Portuguese)")
+                language = input("Choose language: ").strip().lower()
+                if language not in ['en', 'hi', 'pt']:
+                    language = 'en'
+                    print("Invalid language. Using English.\n")
+                continue
+            
+            if not user_input:
+                continue
+            
+            # Get response from AI
+            response = journal.process_text(user_input, language=language)
+            
+            print(f"\nAI ({response['phase'].upper()}): {response['response']}\n")
+            
+        except KeyboardInterrupt:
+            print("\n\n👋 Session ended. Take care!\n")
+            break
+        except Exception as e:
+            print(f"❌ Error: {e}\n")
+
+
+if __name__ == "__main__":
+    main()
