@@ -24,7 +24,7 @@ class JournalAI:
         'relieve': {
             'en': "You are a calm guide offering comfort and relief. Acknowledge their feelings with warmth. Offer one simple, practical coping practice (like breathing or a moment of peace). Be brief, kind, and encouraging. Keep response under 80 words. No flowery language—be simple and direct with genuine warmth.",
             'hi': "आप एक शांत गाइड हैं जो आराम प्रदान करते हैं। उनकी भावनाओं को स्वीकार करें। एक सरल प्रथा सुझाएं। 80 शब्दों से कम। सरल और प्रत्यक्ष रहें।",
-            'pt': "Você é um guia calmo oferecendo conforto. Reconheça seus sentimentos com ternura. Sugira uma prática simples. Menos de 80 palavras. Seja direto e gentil."
+            'pt': "Você é um guia calmo oferecendo conforto. Reconheça seus sentimentos com ternura. Sugira uma prática simples. Menos de 80  palavras. Seja direto e gentil."
         }
     }
 
