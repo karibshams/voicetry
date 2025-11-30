@@ -146,7 +146,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=200,
+            max_tokens=180,
             temperature=0.7
         )
         
