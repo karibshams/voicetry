@@ -21,9 +21,9 @@ class JournalAI:
             'pt': "Você é um guia atencioso. Faça UMA pergunta significativa para ajudá-los a explorar mais profundamente. Menos de 70 palavras. Seja gentil e solidário. Linguagem simples e direta."
         },
         'relieve': {
-            'en': "You are a calm guide in RELIEVE phase. NO QUESTIONS ALLOWED. Acknowledge their pain with warmth. Suggest ONE simple coping practice (breathing/stillness/reflection/grounding). Keep under 80 words. Simple, direct language.",
-            'hi': "आप RELIEVE चरण में एक शांत गाइड हैं। कोई सवाल नहीं - कोई प्रश्न चिह्न नहीं। उनके दर्द को गर्मजोशी से स्वीकार करें। ONE सरल प्रथा सुझाएं (सांस/स्थिरता/प्रतिबिंब)। 80 शब्दों से कम।",
-            'pt': "Você é um guia calmo na fase RELIEVE. SEM PERGUNTAS - nenhum ponto de interrogação. Reconheça sua dor com calor. Sugira UMA prática simples (respiração/calma/reflexão). Menos de 80 palavras."
+            'en': "RELIEVE PHASE - NO QUESTIONS ALLOWED. You are a calm guide. Acknowledge their pain. Suggest ONE simple coping practice (breathing/stillness/grounding/reflection). Use max 80 words. Be warm and direct. NEVER ask a question - not even one.",
+            'hi': "RELIEVE चरण - कोई सवाल नहीं। शांत गाइड बनें। दर्द को स्वीकार करें। ONE सरल प्रथा सुझाएं। 80 शब्द से कम। कभी कोई सवाल न पूछें।",
+            'pt': "Fase RELIEVE - SEM PERGUNTAS. Seja um guia calmo. Reconheça a dor. Sugira UMA prática simples. Menos de 80 palavras. NUNCA faça uma pergunta."
         }
     }
     
@@ -45,11 +45,6 @@ class JournalAI:
             'en': "Thank you for sharing your thoughts and feelings with me. Remember to be kind to yourself. You've done beautiful work today.",
             'hi': "मेरे साथ अपने विचार और भावनाएं साझा करने के लिए धन्यवाद। अपने प्रति दयालु होना याद रखें। आपने आज सुंदर काम किया है।",
             'pt': "Obrigado por compartilhar seus pensamentos e sentimentos comigo. Lembre-se de ser gentil consigo mesmo. Você fez um trabalho lindo hoje."
-        },
-        'crisis_fallback': {
-            'en': "I'm deeply concerned about you. Please call 988 (US) or your local crisis helpline immediately. You are not alone.",
-            'hi': "मुझे आपके बारे में गहरी चिंता है। कृपया तुरंत 988 (भारत में AASRA: 9820466726) या अपनी स्थानीय संकट हेल्पलाइन को कॉल करें।",
-            'pt': "Estou profundamente preocupado com você. Ligue para 188 (Brasil) ou seu serviço de crise local imediatamente. Você não está sozinho."
         }
     }
     
@@ -85,7 +80,7 @@ class JournalAI:
         
         context = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory[-6:]])
         system = self.PROMPTS[self.phase][self.language]
-        user_msg = f"Respond in {self._lang_name()}. Conversation:\n{context}\n\nLatest: {text}"
+        user_msg = f"Conversation:\n{context}\n\nLatest: {text}"
         
         try:
             response = self.client.chat.completions.create(
@@ -102,18 +97,18 @@ class JournalAI:
         return reply
     
     def _crisis_response(self, text):
-        system = self.CRISIS_PROMPT[self.language]
-        user_msg = f"User said: {text}\n\nRespond in {self._lang_name()}. EXACTLY 30-40 words. Specific to what they said. Include helpline."
+        # Include recent conversation history for varied responses
+        history = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory[-4:]])
         
-        try:
-            response = self.client.chat.completions.create(
-                model='gpt-4o-mini',
-                messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user_msg}],
-                max_tokens=80, temperature=0.3
-            )
-            reply = response.choices[0].message.content.strip()
-        except:
-            reply = self.MESSAGES['crisis_fallback'][self.language]
+        system = self.CRISIS_PROMPT[self.language]
+        user_msg = f"Recent conversation:\n{history}\n\nUser now said: {text}\n\nRespond in {self._lang_name()}. EXACTLY 30-40 words. Different response - not a repetition. Be specific to their exact words and situation. Include crisis helpline. Show you understand their specific pain. Be unique and varied."
+        
+        response = self.client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user_msg}],
+            max_tokens=100, temperature=0.9
+        )
+        reply = response.choices[0].message.content.strip()
         
         self.memory.append({'role': 'patient', 'text': text, 'sentiment': 'crisis', 'phase': 'crisis'})
         self.memory.append({'role': 'therapist', 'text': reply, 'phase': 'crisis'})
