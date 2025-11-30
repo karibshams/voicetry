@@ -30,27 +30,20 @@ class JournalAI:
 
     
     CRISIS_KEYWORDS = [
-    # Direct self-harm intent
     "suicide", "kill myself", "end it all", "end my life", "take my life",
     "hurt myself", "self harm", "self-harm", "cutting", "cut myself",
     "i want to die", "want to die", "i want to end everything",
     "better off dead", "no point living", "life is meaningless",
     "i hate my life", "i hate myself", "i don't want to live",
     "i’m done with life", "life is pointless",
-
-    # Indirect suicidal statements
     "wish i was dead", "wish i could disappear", "i don’t care anymore",
     "i can’t do this anymore", "i can’t go on", "i want it to stop",
     "i feel empty", "i’m tired of everything", "i’m giving up",
     "i feel hopeless", "i feel useless", "nothing matters",
     "nobody cares", "i’m a burden", "everyone is better without me",
-
-    # Severe depression markers
     "i’m worthless", "worthless", "nothing will change",
     "i have no reason to live", "no hope", "hopeless", "lifeless",
     "constant pain", "i’m stuck", "i can’t escape",
-
-    # Harm ideation (non-graphic)
     "hurt myself", "harm myself", "i deserve pain",
     "i want to feel something", "pain feels better",
     
