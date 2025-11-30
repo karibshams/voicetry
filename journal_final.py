@@ -22,22 +22,62 @@ class JournalAI:
             'pt': "Você é um guia atencioso e gentil. Faça UMA pergunta significativa. Menos de 70 palavras. Seja gentil e direto."
         },
         'relieve': {
-            'en': "You are a calm, supportive guide. Acknowledge their pain with warmth. Suggest ONE simple coping practice (breathing, stillness, reflection). NO QUESTIONS. Be brief, kind, and encouraging. Keep under 80 words. Simple, direct language. End with gentle reassurance.",
-            'hi': "आप एक शांत, सहायक गाइड हैं। उनकी भावनाओं को स्वीकार करें। एक सरल प्रथा सुझाएं। कोई सवाल नहीं। 80 शब्दों से कम। सरल भाषा।",
-            'pt': "Você é um guia calmo e solidário. Reconheça seus sentimentos. Sugira uma prática simples. SEM PERGUNTAS. Menos de 80 palavras. Linguagem direta."
+            'en': "You are a calm, supportive guide in the RELIEVE phase. Acknowledge their pain with warmth. Suggest ONE simple coping practice (breathing, stillness, reflection). ABSOLUTELY NO QUESTIONS - just comfort and practice. Keep under 80 words. Simple, direct language. End with gentle reassurance that help is available.",
+            'hi': "आप RELIEVE चरण में एक शांत, सहायक गाइड हैं। उनकी भावनाओं को स्वीकार करें। एक सरल प्रथा सुझाएं। कोई सवाल नहीं - सिर्फ आराम और प्रथा। 80 शब्दों से कम। सरल भाषा।",
+            'pt': "Você é um guia calmo e solidário na fase RELIEVE. Reconheça seus sentimentos. Sugira uma prática simples. SEM PERGUNTAS - apenas conforto. Menos de 80 palavras."
         }
     }
 
+    
     CRISIS_KEYWORDS = [
-        'suicide', 'kill myself', 'end it all', 'hurt myself', 'self harm',
-        'cutting', 'die', 'worthless', 'want to die', 'better off dead',
-        'no point living', 'hate myself', 'end my life'
-    ]
+    # Direct self-harm intent
+    "suicide", "kill myself", "end it all", "end my life", "take my life",
+    "hurt myself", "self harm", "self-harm", "cutting", "cut myself",
+    "i want to die", "want to die", "i want to end everything",
+    "better off dead", "no point living", "life is meaningless",
+    "i hate my life", "i hate myself", "i don't want to live",
+    "i’m done with life", "life is pointless",
+
+    # Indirect suicidal statements
+    "wish i was dead", "wish i could disappear", "i don’t care anymore",
+    "i can’t do this anymore", "i can’t go on", "i want it to stop",
+    "i feel empty", "i’m tired of everything", "i’m giving up",
+    "i feel hopeless", "i feel useless", "nothing matters",
+    "nobody cares", "i’m a burden", "everyone is better without me",
+
+    # Severe depression markers
+    "i’m worthless", "worthless", "nothing will change",
+    "i have no reason to live", "no hope", "hopeless", "lifeless",
+    "constant pain", "i’m stuck", "i can’t escape",
+
+    # Harm ideation (non-graphic)
+    "hurt myself", "harm myself", "i deserve pain",
+    "i want to feel something", "pain feels better",
+    
+    # Crisis emotional states
+    "i’m overwhelmed", "i’m broken", "i’m shattered",
+    "i feel dead inside", "i’m not okay", "i’m losing control",
+    "i’m going through too much", "i feel trapped",
+
+    # Surrender expressions
+    "i give up", "i surrender", "i’m tired of fighting",
+    "i don’t want to try anymore", "i can’t keep going",
+
+    # Isolation indicators
+    "i’m completely alone", "nobody understands me",
+    "i have no one", "i feel abandoned",
+
+    # Additional caution phrases
+    "dark thoughts", "ending things", "ending myself",
+    "last day", "final goodbye", "goodbye forever",
+    "i’m at my limit", "i can’t take this pain",]
+
+    
 
     CRISIS_SYSTEM_PROMPT = {
-        'en': "You are a compassionate crisis support responder. The user has expressed suicidal thoughts or self-harm ideation. Respond with immediate concern, validation, and urgency to seek help. Keep response to 30-40 words maximum. Be direct and caring. Include crisis helpline mention.",
-        'hi': "आप एक संकट सहायता प्रदाता हैं। उपयोगकर्ता को आत्मघाती विचार हैं। तुरंत चिंता दिखाएं, सहायता लेने के लिए कहें। 30-40 शब्द। सरल और प्रत्यक्ष।",
-        'pt': "Você é um respondente de apoio em crise. O usuário expressou pensamentos suicidas. Responda com preocupação e urgência. 30-40 palavras. Seja direto e compassivo."
+        'en': "You are a compassionate crisis support responder. Keep response to EXACTLY 30-40 words. Be direct, caring, and urgent. Mention crisis helpline. No filler words. Respond based on what user said, not generic template.",
+        'hi': "आप संकट सहायता प्रदाता हैं। बिल्कुल 30-40 शब्द। सीधे और देखभालपूर्ण रहें। क्राइसिस लाइन का उल्लेख करें। जो उपयोगकर्ता ने कहा उस पर आधारित रहें।",
+        'pt': "Você é um respondente de apoio em crise. EXATAMENTE 30-40 palavras. Seja direto e compassivo. Mencione linha de crise. Responda ao que o usuário disse."
     }
 
     FINAL_RESPONSE = {
@@ -123,7 +163,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=160,
+            max_tokens=200,
             temperature=0.7
         )
         
@@ -184,7 +224,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
+            max_tokens=250,
             temperature=0.6
         )
         
@@ -207,21 +247,15 @@ class JournalAI:
         """Generate dynamic crisis response in user's language"""
         system_msg = self.CRISIS_SYSTEM_PROMPT.get(self.language, self.CRISIS_SYSTEM_PROMPT['en'])
         
-        lang_instruction = {
-            'en': 'English',
-            'hi': 'Hindi',
-            'pt': 'Portuguese'
-        }.get(self.language, 'English')
-        
         messages = [
             {'role': 'system', 'content': system_msg},
-            {'role': 'user', 'content': f"User said: {patient_text}\n\nRespond in {lang_instruction}. Keep to 30-40 words max. Include crisis helpline suggestion."}
+            {'role': 'user', 'content': f"User said: {patient_text}\n\nRespond in {self.language_name()}. EXACTLY 30-40 words. Include crisis helpline. Be specific to what they said."}
         ]
         
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=80,
+            max_tokens=60,
             temperature=0.7
         )
         
