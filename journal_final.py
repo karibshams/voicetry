@@ -101,19 +101,7 @@ class JournalAI:
         
         # Check for crisis
         if self._is_crisis(patient_text):
-            crisis_msg = self.CRISIS_RESPONSE.get(self.language, self.CRISIS_RESPONSE['en'])
-            self.memory.append({
-                'role': 'patient',
-                'text': patient_text,
-                'sentiment': 'crisis',
-                'phase': 'crisis'
-            })
-            self.memory.append({
-                'role': 'therapist',
-                'text': crisis_msg,
-                'phase': 'crisis'
-            })
-            return crisis_msg
+            return self._handle_crisis(patient_text)
         
         # Normal response
         sentiment = self._analyze_sentiment(patient_text)
@@ -125,17 +113,17 @@ class JournalAI:
         })
         
         conversation_context = self._build_context()
-        system_msg = self.PHASES[self.phase][self.language]
+        system_msg = self.PHASES[self.phase].get(self.language, self.PHASES[self.phase]['en'])
         
         messages = [
             {'role': 'system', 'content': system_msg},
-            {'role': 'user', 'content': f"Conversation:\n{conversation_context}"}
+            {'role': 'user', 'content': f"Respond in {self.language_name()}. Conversation:\n{conversation_context}"}
         ]
         
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=160,
+            max_tokens=200,
             temperature=0.7
         )
         
@@ -187,7 +175,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
+            max_tokens=250,
             temperature=0.6
         )
         
