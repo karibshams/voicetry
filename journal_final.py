@@ -139,11 +139,9 @@ class JournalAI:
     def _generate_response(self, patient_text: str) -> str:
         """Generate response based on current phase"""
         
-        # Check for crisis
         if self._is_crisis(patient_text):
             return self._handle_crisis(patient_text)
         
-        # Normal response
         sentiment = self._analyze_sentiment(patient_text)
         self.memory.append({
             'role': 'patient',
