@@ -35,15 +35,15 @@ class JournalAI:
     ]
 
     CRISIS_RESPONSE = {
-        'en': "I hear you, and I'm truly concerned about you. What you're feeling is real, and you matter deeply to God and to me. You're not alone in this pain. Please reach out immediately to someone you trust - a pastor, counselor, or trusted adult - or contact a crisis helpline. God's heart breaks with yours. Would you like to try a calming breathing exercise together?",
+        'en': "I hear you, and I'm truly concerned about you. What you're feeling is real, and you matter deeply. You're not alone in this pain. Please reach out immediately to someone you trust or contact a crisis helpline. Your life has value. Would you like to try a calming breathing exercise together?",
         'hi': "मैं आपकी बात सुन रहा हूं और आपके बारे में चिंतित हूं। आप जो महसूस कर रहे हैं वह वास्तविक है। कृपया तुरंत किसी भरोसेमंद से संपर्क करें। आप अकेले नहीं हैं। क्या आप श्वास व्यायाम करना चाहेंगे?",
-        'pt': "Eu ouço você e estou realmente preocupado. O que você está sentindo é real, e você é profundamente importante para Deus e para mim. Entre em contato imediatamente com alguém de confiança. Você não está sozinho. Gostaria de tentar um exercício de respiração?"
+        'pt': "Eu ouço você e estou realmente preocupado. O que você está sentindo é real, e você é importante. Entre em contato imediatamente com alguém de confiança. Você não está sozinho. Gostaria de tentar um exercício de respiração?"
     }
 
     FINAL_RESPONSE = {
-        'en': "Thank you for sharing your thoughts with me. Remember to be kind to yourself. You've done great work today.",
-        'hi': "मेरे साथ अपने विचार साझा करने के लिए धन्यवाद। अपने प्रति दयालु होना याद रखें। आपने आज बहुत अच्छा काम किया है।",
-        'pt': "Obrigado por compartilhar seus pensamentos comigo. Lembre-se de ser gentil consigo mesmo. Você fez um ótimo trabalho hoje."
+        'en': "Thank you for sharing your thoughts and feelings with me. Remember to be kind to yourself. You've done beautiful work today, and I'm honored to have been part of your journey.",
+        'hi': "मेरे साथ अपने विचार और भावनाएं साझा करने के लिए धन्यवाद। अपने प्रति दयालु होना याद रखें। आपने आज सुंदर काम किया है।",
+        'pt': "Obrigado por compartilhar seus pensamentos e sentimentos comigo. Lembre-se de ser gentil consigo mesmo. Você fez um trabalho lindo hoje."
     }
 
     PHASES_ORDER = ['feel', 'understand', 'relieve']
@@ -55,7 +55,6 @@ class JournalAI:
         
         self.client = OpenAI(api_key=api_key)
         self.clear_memory()
-        print("✅ JournalAI initialized - FEEL → UNDERSTAND → RELIEVE")
 
     def start_chat(self, language: str = 'en') -> dict:
         """Generate a welcome message to start the chat"""
@@ -81,12 +80,6 @@ class JournalAI:
         if language not in self.PHASES:
             language = 'en'
         
-        if self.is_finished:
-            return {
-                'error': 'Chat session is complete',
-                'completed': True
-            }
-        
         response_text = self._generate_response(patient_text, language)
         
         response_data = {
@@ -94,35 +87,13 @@ class JournalAI:
             'response': response_text,
             'language': language,
             'phase': self.phase,
-            'completed': self.is_finished
+            'completed': False
         }
         
         return response_data
-    
-    def get_final_summary(self, language: str = 'en') -> dict:
-        """Get final summary after chat is complete"""
-        if not self.is_finished:
-            return {
-                'error': 'Chat is still in progress',
-                'completed': False
-            }
-        
-        summary = self._generate_final_summary(language)
-        final_msg = self.FINAL_RESPONSE.get(language, self.FINAL_RESPONSE['en'])
-        
-        return {
-            'summary': summary,
-            'final_message': final_msg,
-            'completed': True,
-            'total_messages': len(self.memory),
-            'started_at': self.entry_start.isoformat()
-        }
 
     def _generate_response(self, patient_text: str, language: str) -> str:
         """Generate response based on current phase"""
-        
-        if self.is_finished:
-            return self.FINAL_RESPONSE.get(language, self.FINAL_RESPONSE['en'])
         
         if self._is_crisis(patient_text):
             return self._handle_crisis(patient_text, language)
@@ -146,7 +117,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
+            max_tokens=200,
             temperature=0.7
         )
         
@@ -174,8 +145,6 @@ class JournalAI:
         current_idx = self.PHASES_ORDER.index(self.phase)
         if current_idx < len(self.PHASES_ORDER) - 1:
             self.phase = self.PHASES_ORDER[current_idx + 1]
-        else:
-            self.is_finished = True
 
     def _generate_final_summary(self, language: str) -> str:
         """Generate a final summary of the conversation"""
@@ -185,23 +154,23 @@ class JournalAI:
         ])
         
         summary_prompts = {
-            'en': "Based on the following conversation, please provide a concise and compassionate summary of the user's feelings and journey. End with a message of hope and encouragement.",
-            'hi': "निम्नलिखित बातचीत के आधार पर, कृपया उपयोगकर्ता की भावनाओं और यात्रा का एक संक्षिप्त और दयालु सारांश प्रदान करें। आशा और प्रोत्साहन के संदेश के साथ समाप्त करें।",
-            'pt': "Com base na conversa a seguir, forneça um resumo conciso e compassivo dos sentimentos e da jornada do usuário. Termine com uma mensagem de esperança e encorajamento."
+            'en': "Based on the following conversation, provide a concise and compassionate summary of the user's feelings and journey. End with a message of hope and encouragement.",
+            'hi': "निम्नलिखित बातचीत के आधार पर, उपयोगकर्ता की भावनाओं और यात्रा का एक संक्षिप्त और दयालु सारांश प्रदान करें।",
+            'pt': "Com base na conversa a seguir, forneça um resumo conciso e compassivo dos sentimentos e da jornada do usuário."
         }
         
         summary_prompt = summary_prompts.get(language, summary_prompts['en'])
         
         messages = [
-            {'role': 'system', 'content': "You are a caring summarizer. Your task is to provide a warm and encouraging summary of the user's journal entry."},
+            {'role': 'system', 'content': "You are a caring summarizer. Provide a warm and encouraging summary."},
             {'role': 'user', 'content': f"{summary_prompt}\n\nConversation:\n{conversation_history}"}
         ]
         
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
-            temperature=0.7
+            max_tokens=250,
+            temperature=0.6
         )
         
         return response.choices[0].message.content
@@ -239,6 +208,19 @@ class JournalAI:
         })
         return crisis_msg
 
+    def end_session(self, language: str = 'en') -> dict:
+        """End session and generate summary"""
+        summary = self._generate_final_summary(language)
+        final_msg = self.FINAL_RESPONSE.get(language, self.FINAL_RESPONSE['en'])
+        
+        return {
+            'summary': summary,
+            'final_message': final_msg,
+            'completed': True,
+            'total_messages': len(self.memory),
+            'started_at': self.entry_start.isoformat()
+        }
+
     def get_memory(self) -> list:
         """Get full conversation memory"""
         return self.memory
@@ -247,9 +229,7 @@ class JournalAI:
         """Clear memory for new journal entry"""
         self.memory = []
         self.phase = self.PHASES_ORDER[0]
-        self.is_finished = False
         self.entry_start = datetime.now()
-        print("Memory cleared - Ready for new journal entry")
 
     def get_entry_summary(self) -> dict:
         """Get current entry summary"""
@@ -266,7 +246,7 @@ def main():
     print("\n" + "="*60)
     print("🌿 VoiceMind Journal AI - Live Chat")
     print("="*60)
-    print("Type 'quit' to exit | 'summary' to end & see summary\n")
+    print("Commands: 'done' to end & see summary | 'quit' to exit\n")
     
     journal = JournalAI()
     
@@ -282,9 +262,7 @@ def main():
     welcome = journal.start_chat(language)
     print(f"\n🤖 {welcome['response']}\n")
     
-    message_count = 0
-    
-    while not journal.is_finished:
+    while True:
         user_input = input("👤 You: ").strip()
         
         if not user_input:
@@ -294,19 +272,9 @@ def main():
             print("\n👋 Goodbye! Take care of yourself.\n")
             break
         
-        if user_input.lower() == 'summary':
-            if not journal.is_finished:
-                print("⏳ Complete all 3 phases first to get summary.\n")
-                continue
-        
-        response = journal.process_text(user_input, language)
-        message_count += 1
-        
-        print(f"\n🤖 JournalAI [{response['phase'].upper()}]:\n{response['response']}\n")
-        
-        if response['completed']:
-            print("\n✅ Chat session complete!\n")
-            final = journal.get_final_summary(language)
+        if user_input.lower() == 'done':
+            print("\n✅ Ending session and generating summary...\n")
+            final = journal.end_session(language)
             print("="*60)
             print("📝 CONVERSATION SUMMARY")
             print("="*60)
@@ -315,6 +283,9 @@ def main():
             print(f"💫 {final['final_message']}")
             print("="*60 + "\n")
             break
+        
+        response = journal.process_text(user_input, language)
+        print(f"\n🤖 JournalAI [{response['phase'].upper()}]:\n{response['response']}\n")
 
 
 if __name__ == "__main__":
