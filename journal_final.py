@@ -123,7 +123,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=160,
+            max_tokens=200,
             temperature=0.7
         )
         
@@ -184,7 +184,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=180,
+            max_tokens=250,
             temperature=0.6
         )
         
@@ -202,6 +202,44 @@ class JournalAI:
         elif polarity > -0.3:
             return 'slightly_negative'
         return 'negative'
+
+    def _handle_crisis(self, patient_text: str) -> str:
+        """Generate dynamic crisis response in user's language"""
+        system_msg = self.CRISIS_SYSTEM_PROMPT.get(self.language, self.CRISIS_SYSTEM_PROMPT['en'])
+        
+        lang_instruction = {
+            'en': 'English',
+            'hi': 'Hindi',
+            'pt': 'Portuguese'
+        }.get(self.language, 'English')
+        
+        messages = [
+            {'role': 'system', 'content': system_msg},
+            {'role': 'user', 'content': f"User said: {patient_text}\n\nRespond in {lang_instruction}. Keep to 30-40 words max. Include crisis helpline suggestion."}
+        ]
+        
+        response = self.client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=messages,
+            max_tokens=100,
+            temperature=0.7
+        )
+        
+        crisis_msg = response.choices[0].message.content
+        
+        self.memory.append({
+            'role': 'patient',
+            'text': patient_text,
+            'sentiment': 'crisis',
+            'phase': 'crisis'
+        })
+        self.memory.append({
+            'role': 'therapist',
+            'text': crisis_msg,
+            'phase': 'crisis'
+        })
+        
+        return crisis_msg
 
     def _is_crisis(self, text: str) -> bool:
         """Check for crisis keywords"""
