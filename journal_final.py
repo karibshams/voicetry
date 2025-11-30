@@ -54,20 +54,15 @@ class JournalAI:
     "hurt myself", "harm myself", "i deserve pain",
     "i want to feel something", "pain feels better",
     
-    # Crisis emotional states
     "i’m overwhelmed", "i’m broken", "i’m shattered",
     "i feel dead inside", "i’m not okay", "i’m losing control",
     "i’m going through too much", "i feel trapped",
 
-    # Surrender expressions
     "i give up", "i surrender", "i’m tired of fighting",
     "i don’t want to try anymore", "i can’t keep going",
-
-    # Isolation indicators
     "i’m completely alone", "nobody understands me",
     "i have no one", "i feel abandoned",
 
-    # Additional caution phrases
     "dark thoughts", "ending things", "ending myself",
     "last day", "final goodbye", "goodbye forever",
     "i’m at my limit", "i can’t take this pain",]
