@@ -89,8 +89,12 @@ class JournalAI:
                 max_tokens=160, temperature=0.7
             )
             reply = response.choices[0].message.content.strip()
+            
+            # RELIEVE phase: remove any questions
+            if self.phase == 'relieve' and '?' in reply:
+                reply = reply.replace('?', '.').replace('Can you', 'You can').replace('What do', 'Consider')
         except:
-            reply = "I'm having trouble. Can you tell me more?"
+            reply = "I'm here to listen. Tell me more."
         
         self.memory.append({'role': 'therapist', 'text': reply, 'phase': self.phase})
         self._advance_phase()
@@ -116,7 +120,12 @@ class JournalAI:
     
     def _is_crisis(self, text):
         t = text.lower()
-        return any(kw in t for kw in self.CRISIS_KEYWORDS)
+        # Exact keywords
+        if any(kw in t for kw in self.CRISIS_KEYWORDS):
+            return True
+        # Pattern matching for typos and variations
+        crisis_patterns = ['suicid', 'kill', 'die', 'self harm', 'hopeless', 'worthless', 'burden', 'end my', 'harm myself', 'want to d', 'no reason', 'better off']
+        return any(pattern in t for pattern in crisis_patterns)
     
     def _lang_name(self):
         return {'en': 'English', 'hi': 'Hindi', 'pt': 'Portuguese'}[self.language]
