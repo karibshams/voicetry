@@ -123,7 +123,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=200,
+            max_tokens=160,
             temperature=0.7
         )
         
@@ -138,6 +138,15 @@ class JournalAI:
         self._advance_phase()
         
         return therapist_reply
+
+    def language_name(self) -> str:
+        """Get language name for AI instructions"""
+        lang_map = {
+            'en': 'English',
+            'hi': 'Hindi',
+            'pt': 'Portuguese'
+        }
+        return lang_map.get(self.language, 'English')
 
     def _build_context(self) -> str:
         """Build conversation context from recent memory"""
@@ -175,7 +184,7 @@ class JournalAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=250,
+            max_tokens=180,
             temperature=0.6
         )
         
