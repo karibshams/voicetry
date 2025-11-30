@@ -1,13 +1,16 @@
+# journal_final_fixed.py
 from openai import OpenAI
 from textblob import TextBlob
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import re
+import random
 
 load_dotenv()
 
 class JournalAI:
-    """FEEL → UNDERSTAND → RELIEVE Journaling AI (Compact & Accurate)"""
+    """FEEL → UNDERSTAND → RELIEVE Journaling AI (Fixed: crisis, phase, rotate practices)"""
     
     PROMPTS = {
         'feel': {
@@ -27,14 +30,20 @@ class JournalAI:
         }
     }
     
-    CRISIS_KEYWORDS = ['suicid', 'kill', 'die', 'self harm', 'hopeless', 'worthless', 'burden', 'end my', 'harm myself', 'alone', 'pain']
+    # Keyword list for quick detection (kept short intentionally; regex handles boundaries)
+    CRISIS_KEYWORDS = [
+        'suicide', 'suicid', 'kill myself', 'want to die', 'want to suicid', 
+        'end my life', 'harm myself', 'cant go on', 'can\'t go on', 'i want to die',
+        'worthless', 'hopeless', 'no reason to live', 'better off dead'
+    ]
     
-    CRISIS_PROMPT = {
-        'en': "You are a compassionate crisis support responder. Keep response to EXACTLY 30-40 words. Be direct, caring, and urgent. Mention crisis helpline. Respond specifically to what they said, not generic.",
-        'hi': "आप एक संकट सहायता प्रदाता हैं। बिल्कुल 30-40 शब्द। सीधे, देखभालपूर्ण और तत्काल रहें। संकट हेल्पलाइन का उल्लेख करें। जो उन्होंने कहा उस पर विशेष रूप से प्रतिक्रिया दें।",
-        'pt': "Você é um respondente de apoio em crise. EXATAMENTE 30-40 palavras. Seja direto, compassivo e urgente. Mencione linha de crise. Responda especificamente ao que eles disseram."
-    }
-    
+    # Template crisis prompt (we'll produce a deterministic templated reply of 30-40 words)
+    # Note: We do NOT call the model for crisis replies to ensure strict compliance.
+    CRISIS_TEMPLATE = ("I'm very sorry you're feeling this way and I hear the depth of your pain. "
+                       "Please contact immediate help — call {helpline} or your local emergency services now. "
+                       "You are not alone; help is available.")
+    # This template yields 35 words when expanded (verify if helpline is short).
+
     MESSAGES = {
         'welcome': {
             'en': "Welcome to your journal. This is a safe space for you to express your thoughts and feelings. How are you feeling today?",
@@ -48,98 +57,201 @@ class JournalAI:
         }
     }
     
-    def __init__(self):
-        api_key = os.getenv('OPENAI_API_KEY')
+    # A rotating list of simple coping practices (strings contain no questions)
+    DEFAULT_PRACTICES = [
+        "Try a breathing cycle: inhale 4 counts, hold 4 counts, exhale 6 counts. Repeat a few times and notice your body settling.",
+        "Grounding: notice five things you can see, four you can touch, three you can hear, two you can smell, one you can taste.",
+        "Stillness: sit quietly for two minutes, softening shoulders, following the breath and letting thoughts pass without judgment.",
+        "Reflection: write one short line about what you feel right now, then write one small thing you can do for yourself."
+    ]
+    
+    def __init__(self, api_key=None, language='en'):
+        api_key = api_key or os.getenv('OPENAI_API_KEY')
         if not api_key:
-            raise ValueError("OPENAI_API_KEY not found!")
-        self.client = OpenAI(api_key=api_key)
-        self.language = 'en'
+            # We allow running without an API key for testing; but non-crisis chat will fallback.
+            print("Warning: OPENAI_API_KEY not found. Model calls will be skipped; fallback responses used.")
+            self.client = None
+        else:
+            self.client = OpenAI(api_key=api_key)
+        self.language = language if language in self.PROMPTS['feel'] else 'en'
         self.clear_memory()
+        # Practices rotate; remember index to avoid repetition
+        self._practice_index = 0
+        self._practices = list(self.DEFAULT_PRACTICES)
+        random.shuffle(self._practices)
+        # Crisis helpline configurable via env var. If not provided, use generic guidance
+        self.crisis_helpline = os.getenv('CRISIS_HELPLINE', None)
     
     def start_chat(self, language='en'):
         if language not in self.PROMPTS['feel']:
             language = 'en'
         self.language = language
+        # Ensure phase is returned consistently
         return {'response': self.MESSAGES['welcome'][language], 'language': language, 'phase': self.phase}
     
     def process_text(self, text, language=None):
         if language and language in self.PROMPTS['feel']:
             self.language = language
-        response = self._generate_response(text)
-        return {'response': response, 'language': self.language, 'phase': self.phase, 'is_crisis': self._is_crisis(text)}
-    
-    def _generate_response(self, text):
+        # Check crisis first (robustly)
         is_crisis = self._is_crisis(text)
         if is_crisis:
-            return self._crisis_response(text)
+            response = self._crisis_response(text)
+            # Do not advance the phase after crisis
+            return {'response': response, 'language': self.language, 'phase': self.phase, 'is_crisis': True}
         
-        sentiment = TextBlob(text).sentiment.polarity
-        sentiment_label = 'positive' if sentiment > 0.3 else 'negative' if sentiment < -0.3 else 'neutral'
+        # Not crisis: normal flow
+        response = self._generate_response(text)
+        return {'response': response, 'language': self.language, 'phase': self.phase, 'is_crisis': False}
+    
+    def _generate_response(self, text):
+        # Sentiment analysis
+        try:
+            polarity = TextBlob(text).sentiment.polarity
+        except Exception:
+            polarity = 0.0
+        sentiment_label = 'positive' if polarity > 0.3 else 'negative' if polarity < -0.3 else 'neutral'
         
+        # Add user utterance to memory
         self.memory.append({'role': 'patient', 'text': text, 'sentiment': sentiment_label, 'phase': self.phase})
         
+        # Build context for the LLM (last 6 messages)
         context = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory[-6:]])
-        system = self.PROMPTS[self.phase][self.language]
+        system = self.PROMPTS.get(self.phase, {}).get(self.language, self.PROMPTS['feel']['en'])
         user_msg = f"Conversation:\n{context}\n\nLatest: {text}"
         
-        try:
-            response = self.client.chat.completions.create(
-                model='gpt-4o-mini',
-                messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user_msg}],
-                max_tokens=160, temperature=0.7
-            )
-            reply = response.choices[0].message.content.strip()
-            
-            # RELIEVE phase: remove any questions
-            if self.phase == 'relieve' and '?' in reply:
-                reply = reply.replace('?', '.').replace('Can you', 'You can').replace('What do', 'Consider')
-        except:
-            reply = "I'm here to listen. Tell me more."
+        reply = None
+        # If we don't have an API client available, produce a safe fallback
+        if not self.client:
+            # Fallback behavior: short templated replies depending on phase
+            if self.phase == 'feel':
+                reply = "Thank you for sharing. I hear you. What felt strongest about that experience for you?"
+            elif self.phase == 'understand':
+                reply = "I hear that. Tell me more about what that felt like in your body or day-to-day life."
+            elif self.phase == 'relieve':
+                reply = self._next_practice()
+            else:
+                reply = "I'm here to listen."
+        else:
+            # Try to call the model for non-crisis replies
+            try:
+                response = self.client.chat.completions.create(
+                    model='gpt-4o-mini',
+                    messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user_msg}],
+                    max_tokens=160, temperature=0.7
+                )
+                reply = response.choices[0].message.content.strip()
+                # Ensure RELIEVE phase contains no question marks
+                if self.phase == 'relieve':
+                    # If model returned questions, replace them and ensure it's an instruction/suggestion
+                    if '?' in reply:
+                        reply = self._sanitize_relieve_reply(reply)
+            except Exception:
+                # fallback on API failure
+                reply = "I'm here to listen. Tell me more."
         
+        # Append therapist reply to memory and advance phase
         self.memory.append({'role': 'therapist', 'text': reply, 'phase': self.phase})
         self._advance_phase()
         return reply
     
     def _crisis_response(self, text):
-        # Include recent conversation history for varied responses
-        history = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory[-4:]])
-        
-        system = self.CRISIS_PROMPT[self.language]
-        user_msg = f"Recent conversation:\n{history}\n\nUser now said: {text}\n\nRespond in {self._lang_name()}. EXACTLY 30-40 words. Different response - not a repetition. Be specific to their exact words and situation. Include crisis helpline. Show you understand their specific pain. Be unique and varied."
-        
-        response = self.client.chat.completions.create(
-            model='gpt-4o-mini',
-            messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user_msg}],
-            max_tokens=100, temperature=0.9
-        )
-        reply = response.choices[0].message.content.strip()
-        
+        """
+        Deterministic crisis reply using a template of 30-40 words.
+        We set phase to 'crisis' and DO NOT call the model here.
+        """
+        # set crisis phase so UI shows it correctly
+        self.phase = 'crisis'
+        # store patient text with crisis sentiment
         self.memory.append({'role': 'patient', 'text': text, 'sentiment': 'crisis', 'phase': 'crisis'})
+        
+        helpline_text = self.crisis_helpline.strip() if self.crisis_helpline else "your local emergency services or a trusted person"
+        # Fill template
+        reply = self.CRISIS_TEMPLATE.format(helpline=helpline_text)
+        # Ensure reply length between 30 and 40 words (our template is 35 words if helpline text is short)
+        word_count = len(reply.split())
+        # If helpline_text is long and pushes word count beyond 40, shorten the helpline mention
+        if word_count > 40:
+            # Use a shorter fallback phrase
+            reply = self.CRISIS_TEMPLATE.format(helpline="local emergency services")
+        # Append therapist crisis reply to memory
         self.memory.append({'role': 'therapist', 'text': reply, 'phase': 'crisis'})
+        # Do NOT advance phase
         return reply
     
     def _is_crisis(self, text):
-        t = text.lower()
-        # Exact keywords
-        if any(kw in t for kw in self.CRISIS_KEYWORDS):
+        """
+        More robust matching: case-insensitive, word-boundary checks and some phrase checks.
+        """
+        if not text or not isinstance(text, str):
+            return False
+        t = text.lower().strip()
+        # Quick exact phrase checks (common explicit suicidal phrases)
+        explicit_phrases = [
+            "i want to die", "i want to kill myself", "i want to suicide",
+            "i want to end my life", "i'm going to kill myself", "i'm going to end my life"
+        ]
+        for phrase in explicit_phrases:
+            if phrase in t:
+                return True
+        # Word boundary regex for individual keywords to avoid accidental matches
+        for kw in self.CRISIS_KEYWORDS:
+            pattern = r'\b' + re.escape(kw.lower()) + r'\b'
+            if re.search(pattern, t):
+                return True
+        # Also check short forms with punctuation or misspellings
+        if re.search(r'\b(suicid|suicidal|kill myself|harm myself)\b', t):
             return True
-        # Pattern matching for typos and variations
-        crisis_patterns = ['suicid', 'kill', 'die', 'self harm', 'hopeless', 'worthless', 'burden', 'end my', 'harm myself', 'want to d', 'no reason', 'better off']
-        return any(pattern in t for pattern in crisis_patterns)
+        return False
+    
+    def _next_practice(self):
+        """
+        Return the next coping practice (rotating) and ensure no questions are returned.
+        """
+        if not self._practices:
+            self._practices = list(self.DEFAULT_PRACTICES)
+            random.shuffle(self._practices)
+            self._practice_index = 0
+        practice = self._practices[self._practice_index % len(self._practices)]
+        self._practice_index += 1
+        # Ensure there is no question mark (solid defensive approach)
+        practice = practice.replace('?', '.').strip()
+        return practice
+    
+    def _sanitize_relieve_reply(self, text):
+        """Remove questions and convert them into directive sentences for RELIEVE phase."""
+        # Replace common question patterns
+        sanitized = text.replace('?', '.')
+        sanitized = re.sub(r'\b(Can you|Could you|Would you|What do you)\b', 'Consider', sanitized, flags=re.IGNORECASE)
+        # Ensure length under 80 words
+        words = sanitized.split()
+        if len(words) > 80:
+            sanitized = ' '.join(words[:80]) + '...'
+        return sanitized
     
     def _lang_name(self):
-        return {'en': 'English', 'hi': 'Hindi', 'pt': 'Portuguese'}[self.language]
+        return {'en': 'English', 'hi': 'Hindi', 'pt': 'Portuguese'}.get(self.language, 'English')
     
     def _advance_phase(self):
+        """
+        Move through phases: feel -> understand -> relieve.
+        Do NOT advance if currently in crisis.
+        """
+        if self.phase == 'crisis':
+            return  # do not change phase while crisis
         phases = ['feel', 'understand', 'relieve']
-        idx = phases.index(self.phase)
-        self.phase = phases[min(idx + 1, 2)]
+        try:
+            idx = phases.index(self.phase)
+        except ValueError:
+            idx = 0
+        self.phase = phases[min(idx + 1, len(phases) - 1)]
     
     def _generate_summary(self):
         history = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory])
         system = f"Summarize compassionately. Respond in {self._lang_name()}."
         user_msg = f"Conversation:\n{history}"
         
+        if not self.client:
+            return "Session complete. Thank you for sharing."
         try:
             response = self.client.chat.completions.create(
                 model='gpt-4o-mini',
@@ -147,7 +259,7 @@ class JournalAI:
                 max_tokens=200, temperature=0.6
             )
             return response.choices[0].message.content.strip()
-        except:
+        except Exception:
             return "Session complete. Thank you for sharing."
     
     def end_session(self):
@@ -162,7 +274,7 @@ class JournalAI:
 
 def main():
     print("\n" + "="*60)
-    print("🌿 VoiceMind Journal AI - Live Chat")
+    print("🌿 VoiceMind Journal AI - Live Chat (Fixed)")
     print("="*60)
     print("Type 'quit' to exit | 'summary' to end\n")
     
@@ -193,7 +305,9 @@ def main():
             break
         
         response = journal.process_text(user_input)
-        print(f"\n🤖 [{response['phase'].upper()}]: {response['response']}\n")
+        # Print phase label. If crisis, show CRISIS explicitly.
+        phase_label = response['phase'].upper()
+        print(f"\n🤖 [{phase_label}]: {response['response']}\n")
 
 
 if __name__ == "__main__":
