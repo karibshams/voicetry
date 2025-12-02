@@ -231,9 +231,8 @@ def test_text(text, lang='en'):
     print(f"\n💭 You: {response['text_input']}")
     print(f"💬 Coach: {response['coach_reply']}")
 
-def text_chat():
+def text_chat(lang='en'):
     """Multi-turn text chat"""
-    lang = 'en'
     coach.set_user_context(lang=lang)
     print(f"\n💬 TEXT CHAT")
     print("Commands: 'lang' (change language), 'quit' (exit)\n")
@@ -293,7 +292,7 @@ if __name__ == "__main__":
             elif choice == '2':
                 lang = input("Language (en/hi/pt) [en]: ").strip() or 'en'
                 if lang in ['en', 'hi', 'pt']:
-                    text_chat()
+                    text_chat(lang)
                 else:
                     print("❌ Invalid input")
             
