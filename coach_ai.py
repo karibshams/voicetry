@@ -4,10 +4,8 @@ from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 from textblob import TextBlob
-
 from voice import VoiceEngine
 from prompt import Prompts
-
 load_dotenv()
 
 class CoachAI:
@@ -17,7 +15,7 @@ class CoachAI:
         """Initialize Coach AI with voice engine and OpenAI client"""
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
-            raise ValueError("❌ OPENAI_API_KEY not found in .env file!")
+            raise ValueError("OPENAI_API_KEY not found in .env file!")
         
         self.client = OpenAI(api_key=api_key)
         self.voice = VoiceEngine()
@@ -29,7 +27,7 @@ class CoachAI:
             'name': 'User',
             'session_start': datetime.now().isoformat()
         }
-        print("✅ CoachAI initialized successfully")
+        print("CoachAI initialized successfully")
     
     def process_voice(self, audio_data: bytes, lang: str = 'en', gender: str = 'female') -> Dict:
         """
@@ -44,26 +42,17 @@ class CoachAI:
         Returns:
             dict: {text_input, coach_reply, audio_reply, sentiment, lang, gender}
         """
-        # Convert speech to text
         stt_result = self.voice.speech_to_text(audio_data)
         user_text = stt_result['text']
         detected_lang = stt_result['language']
         
         if not user_text:
             return self._error_response("I couldn't hear you clearly", lang, gender)
-        
-        # Use detected language or user preference
         lang = detected_lang if detected_lang else lang
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'voice', sentiment['mood'])
@@ -98,14 +87,8 @@ class CoachAI:
         user_text = user_text.strip()
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'text', sentiment['mood'])
@@ -133,12 +116,9 @@ class CoachAI:
         Returns:
             str: Coaching response (under 70 words as per prompt)
         """
-        # Get exact COACH prompt from prompt.py Prompts.COACH[lang]
         system_prompt = Prompts.get('coach', lang)
         
         messages = [{'role': 'system', 'content': system_prompt}]
-        
-        # Include recent conversation context for continuity
         recent_history = self.conversation_history[-4:] if len(self.conversation_history) > 0 else []
         for entry in recent_history:
             messages.append({'role': 'user', 'content': entry['user_text']})
@@ -149,7 +129,7 @@ class CoachAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=80,
+            max_tokens=70,
             temperature=0.7
         )
         
