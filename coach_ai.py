@@ -234,13 +234,13 @@ def test_text(text, lang='en'):
 def text_chat():
     """Multi-turn text chat"""
     lang = 'en'
-    
     coach.set_user_context(lang=lang)
-    print(f"\n💬 TEXT CHAT | Lang: {lang}")
-    print("Commands: 'lang' (change language), 'quit' (exit)")
+    print(f"\n💬 TEXT CHAT")
+    print("Commands: 'lang' (change language), 'quit' (exit)\n")
     
     while True:
-        msg = input("\n💭 You: ").strip()
+        print(f"[Lang: {lang}]", end=" ")
+        msg = input("💭 You: ").strip()
         
         if msg.lower() == 'quit':
             break
@@ -249,10 +249,12 @@ def text_chat():
             if new_lang in ['en', 'hi', 'pt']:
                 lang = new_lang
                 coach.set_user_context(lang=lang)
-                print(f"✅ Language changed to {lang}")
+                print(f"✅ Language changed to {lang}\n")
+            else:
+                print("❌ Invalid language\n")
         elif msg:
             response = coach.process_text(msg, lang=lang)
-            print(f"💬 Coach: {response['coach_reply']}")
+            print(f"💬 Coach: {response['coach_reply']}\n")
 
 def show_stats():
     """Show session statistics"""
