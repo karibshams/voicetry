@@ -4,7 +4,6 @@ from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 from textblob import TextBlob
-
 from voice import VoiceEngine
 from prompt import Prompts
 
@@ -44,26 +43,17 @@ class CoachAI:
         Returns:
             dict: {text_input, coach_reply, audio_reply, sentiment, lang, gender}
         """
-        # Convert speech to text
         stt_result = self.voice.speech_to_text(audio_data)
         user_text = stt_result['text']
         detected_lang = stt_result['language']
         
         if not user_text:
             return self._error_response("I couldn't hear you clearly", lang, gender)
-        
-        # Use detected language or user preference
         lang = detected_lang if detected_lang else lang
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'voice', None)
@@ -97,14 +87,8 @@ class CoachAI:
         user_text = user_text.strip()
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'text', None)
@@ -131,12 +115,9 @@ class CoachAI:
         Returns:
             str: Coaching response (under 70 words as per prompt)
         """
-        # Get exact COACH prompt from prompt.py Prompts.COACH[lang]
         system_prompt = Prompts.get('coach', lang)
         
         messages = [{'role': 'system', 'content': system_prompt}]
-        
-        # Include recent conversation context for continuity
         recent_history = self.conversation_history[-4:] if len(self.conversation_history) > 0 else []
         for entry in recent_history:
             messages.append({'role': 'user', 'content': entry['user_text']})
@@ -220,91 +201,3 @@ class CoachAI:
             'preferred_voice': self.user_context['gender_preference']
         }
 
-from coach_ai import CoachAI
-
-coach = CoachAI()
-
-def test_text(text, lang='en'):
-    """Test text input"""
-    response = coach.process_text(text, lang=lang)
-    
-    print(f"\n💭 You: {response['text_input']}")
-    print(f"💬 Coach: {response['coach_reply']}")
-
-def text_chat(lang='en'):
-    """Multi-turn text chat"""
-    coach.set_user_context(lang=lang)
-    print(f"\n💬 TEXT CHAT")
-    print("Commands: 'lang' (change language), 'quit' (exit)\n")
-    
-    while True:
-        print(f"[Lang: {lang}]", end=" ")
-        msg = input("💭 You: ").strip()
-        
-        if msg.lower() == 'quit':
-            break
-        elif msg.lower() == 'lang':
-            new_lang = input("Language (en/hi/pt): ").strip()
-            if new_lang in ['en', 'hi', 'pt']:
-                lang = new_lang
-                coach.set_user_context(lang=lang)
-                print(f"✅ Language changed to {lang}\n")
-            else:
-                print("❌ Invalid language\n")
-        elif msg:
-            response = coach.process_text(msg, lang=lang)
-            print(f"💬 Coach: {response['coach_reply']}\n")
-
-def show_stats():
-    """Show session statistics"""
-    stats = coach.get_stats()
-    print("\n" + "="*50)
-    print("📊 SESSION STATS")
-    print("="*50)
-    print(f"Total Messages: {stats['total_messages']}")
-    print(f"Languages: {', '.join(stats['languages_used']) if stats['languages_used'] else 'None'}")
-    print(f"Current Language: {stats['current_language']}")
-    print(f"Preferred Voice: {stats['preferred_voice']}")
-    print(f"Session Start: {stats['session_start']}")
-
-if __name__ == "__main__":
-    try:
-        while True:
-            print("\n" + "="*50)
-            print("💬 COACH AI - TEXT TESTING")
-            print("="*50)
-            print("1. Single Text Message")
-            print("2. Text Chat (Multi-turn)")
-            print("3. View Stats")
-            print("4. Exit")
-            print("-"*50)
-            
-            choice = input("Choose (1-4): ").strip()
-            
-            if choice == '1':
-                text = input("Your message: ").strip()
-                lang = input("Language (en/hi/pt) [en]: ").strip() or 'en'
-                if text and lang in ['en', 'hi', 'pt']:
-                    test_text(text, lang)
-                else:
-                    print("❌ Invalid input")
-            
-            elif choice == '2':
-                lang = input("Language (en/hi/pt) [en]: ").strip() or 'en'
-                if lang in ['en', 'hi', 'pt']:
-                    text_chat(lang)
-                else:
-                    print("❌ Invalid input")
-            
-            elif choice == '3':
-                show_stats()
-            
-            elif choice == '4':
-                print("\n👋 Goodbye!")
-                break
-            
-            else:
-                print("❌ Invalid choice")
-    
-    except KeyboardInterrupt:
-        print("\n\n👋 Bye!")
