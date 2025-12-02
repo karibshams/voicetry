@@ -1,5 +1,4 @@
 import os
-import json
 from datetime import datetime
 from typing import Dict, Optional
 from dotenv import load_dotenv
@@ -45,26 +44,17 @@ class CoachAI:
         Returns:
             dict: {text_input, coach_reply, audio_reply, sentiment, lang, gender}
         """
-        # Convert speech to text
         stt_result = self.voice.speech_to_text(audio_data)
         user_text = stt_result['text']
         detected_lang = stt_result['language']
         
         if not user_text:
             return self._error_response("I couldn't hear you clearly", lang, gender)
-        
-        # Use detected language or user preference
         lang = detected_lang if detected_lang else lang
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'voice')
@@ -215,7 +205,7 @@ class CoachAI:
             self.user_context['gender_preference'] = gender
     
     def get_conversation_history(self, limit: int = None) -> list:
-        """Get conversation history"""
+        """Get conversation history (backend handles persistence)"""
         if limit:
             return self.conversation_history[-limit:]
         return self.conversation_history
@@ -223,27 +213,6 @@ class CoachAI:
     def clear_conversation_history(self):
         """Clear all conversation history"""
         self.conversation_history = []
-    
-    def save_session(self, filepath: str = 'coach_session.json'):
-        """Save session data to file"""
-        session_data = {
-            'user_context': self.user_context,
-            'conversation_history': self.conversation_history
-        }
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(session_data, f, indent=2, ensure_ascii=False)
-        print(f"✅ Session saved to {filepath}")
-    
-    def load_session(self, filepath: str = 'coach_session.json'):
-        """Load session data from file"""
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                session_data = json.load(f)
-                self.user_context = session_data.get('user_context', self.user_context)
-                self.conversation_history = session_data.get('conversation_history', [])
-            print(f"✅ Session loaded from {filepath}")
-        except FileNotFoundError:
-            print(f"ℹ️ No session file found at {filepath}")
     
     def get_stats(self) -> Dict:
         """Get session statistics"""
