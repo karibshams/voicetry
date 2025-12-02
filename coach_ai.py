@@ -147,7 +147,7 @@ class CoachAI:
         response = self.client.chat.completions.create(
             model='gpt-4o-mini',
             messages=messages,
-            max_tokens=70,
+            max_tokens=80,
             temperature=0.7
         )
         
