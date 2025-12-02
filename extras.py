@@ -104,3 +104,93 @@ class AvatarController:
     def get_affirmation_pose(self) -> Dict[str, str]:
         """Special pose for affirmations"""
         return {'animation': 'encouraging_gesture', 'glow': 'inspiring_gold'}
+    
+
+from coach_ai import CoachAI
+
+coach = CoachAI()
+
+def test_text(text, lang='en'):
+    """Test text input"""
+    response = coach.process_text(text, lang=lang)
+    
+    print(f"\n💭 You: {response['text_input']}")
+    print(f"💬 Coach: {response['coach_reply']}")
+
+def text_chat(lang='en'):
+    """Multi-turn text chat"""
+    coach.set_user_context(lang=lang)
+    print(f"\n💬 TEXT CHAT")
+    print("Commands: 'lang' (change language), 'quit' (exit)\n")
+    
+    while True:
+        print(f"[Lang: {lang}]", end=" ")
+        msg = input("💭 You: ").strip()
+        
+        if msg.lower() == 'quit':
+            break
+        elif msg.lower() == 'lang':
+            new_lang = input("Language (en/hi/pt): ").strip()
+            if new_lang in ['en', 'hi', 'pt']:
+                lang = new_lang
+                coach.set_user_context(lang=lang)
+                print(f"✅ Language changed to {lang}\n")
+            else:
+                print("❌ Invalid language\n")
+        elif msg:
+            response = coach.process_text(msg, lang=lang)
+            print(f"💬 Coach: {response['coach_reply']}\n")
+
+def show_stats():
+    """Show session statistics"""
+    stats = coach.get_stats()
+    print("\n" + "="*50)
+    print("📊 SESSION STATS")
+    print("="*50)
+    print(f"Total Messages: {stats['total_messages']}")
+    print(f"Languages: {', '.join(stats['languages_used']) if stats['languages_used'] else 'None'}")
+    print(f"Current Language: {stats['current_language']}")
+    print(f"Preferred Voice: {stats['preferred_voice']}")
+    print(f"Session Start: {stats['session_start']}")
+
+if __name__ == "__main__":
+    try:
+        while True:
+            print("\n" + "="*50)
+            print("💬 COACH AI - TEXT TESTING")
+            print("="*50)
+            print("1. Single Text Message")
+            print("2. Text Chat (Multi-turn)")
+            print("3. View Stats")
+            print("4. Exit")
+            print("-"*50)
+            
+            choice = input("Choose (1-4): ").strip()
+            
+            if choice == '1':
+                text = input("Your message: ").strip()
+                lang = input("Language (en/hi/pt) [en]: ").strip() or 'en'
+                if text and lang in ['en', 'hi', 'pt']:
+                    test_text(text, lang)
+                else:
+                    print("❌ Invalid input")
+            
+            elif choice == '2':
+                lang = input("Language (en/hi/pt) [en]: ").strip() or 'en'
+                if lang in ['en', 'hi', 'pt']:
+                    text_chat(lang)
+                else:
+                    print("❌ Invalid input")
+            
+            elif choice == '3':
+                show_stats()
+            
+            elif choice == '4':
+                print("\n👋 Goodbye!")
+                break
+            
+            else:
+                print("❌ Invalid choice")
+    
+    except KeyboardInterrupt:
+        print("\n\n👋 Bye!")
