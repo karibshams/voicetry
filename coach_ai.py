@@ -89,14 +89,8 @@ class CoachAI:
         user_text = user_text.strip()
         self.user_context['lang'] = lang
         self.user_context['gender_preference'] = gender
-        
-        # Generate coaching response using exact coach prompt
         coach_reply = self._generate_coach_response(user_text, lang)
-        
-        # Convert response to speech with user's selected gender voice
         audio_reply = self.voice.text_to_speech(coach_reply, lang, gender)
-        
-        # Analyze sentiment
         sentiment = self._get_sentiment(user_text)
         
         self._save_conversation(user_text, coach_reply, lang, 'text')
@@ -124,7 +118,6 @@ class CoachAI:
         Returns:
             str: Coaching response (under 70 words as per prompt)
         """
-        # Get exact COACH prompt from prompt.py Prompts.COACH[lang]
         system_prompt = Prompts.get('coach', lang)
         
         messages = [{'role': 'system', 'content': system_prompt}]
