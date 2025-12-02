@@ -6,7 +6,6 @@ from openai import OpenAI
 from textblob import TextBlob
 from voice import VoiceEngine
 from prompt import Prompts
-
 load_dotenv()
 
 class CoachAI:
