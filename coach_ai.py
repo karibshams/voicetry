@@ -4,7 +4,6 @@ from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 from textblob import TextBlob
-
 from voice import VoiceEngine
 from prompt import Prompts
 
@@ -121,8 +120,6 @@ class CoachAI:
         system_prompt = Prompts.get('coach', lang)
         
         messages = [{'role': 'system', 'content': system_prompt}]
-        
-        # Include recent conversation context for continuity
         recent_history = self.conversation_history[-4:] if len(self.conversation_history) > 0 else []
         for entry in recent_history:
             messages.append({'role': 'user', 'content': entry['user_text']})
