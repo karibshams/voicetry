@@ -228,18 +228,12 @@ class JournalAI:
         return {'en': 'English', 'hi': 'Hindi', 'pt': 'Portuguese'}.get(self.language, 'English')
     
     def _advance_phase(self):
-        """
-        Move through phases: feel -> understand -> relieve.
-        Do NOT advance if currently in crisis.
-        """
         if self.phase == 'crisis':
-            return  # do not change phase while crisis
+            return  
         phases = ['feel', 'understand', 'relieve']
-        try:
-            idx = phases.index(self.phase)
-        except ValueError:
-            idx = 0
+        idx = phases.index(self.phase) if self.phase in phases else 0
         self.phase = phases[min(idx + 1, len(phases) - 1)]
+
     
     def _generate_summary(self):
         history = "\n".join([f"{m['role'].capitalize()}: {m['text']}" for m in self.memory])
