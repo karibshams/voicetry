@@ -171,3 +171,126 @@ class VoiceEngine:
             str: Full language name
         """
         return self.SUPPORTED_LANGUAGES.get(lang_code, 'english')
+    
+
+
+import pyaudio
+import wave
+
+def record_audio(duration: int = 5) -> bytes:
+    """Record audio from microphone for specified duration"""
+    print(f"🎤 Recording for {duration} seconds...")
+    
+    CHUNK = 1024
+    FORMAT = pyaudio.paFloat32
+    CHANNELS = 1
+    RATE = 16000
+    
+    p = pyaudio.PyAudio()
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, 
+                    input=True, frames_per_buffer=CHUNK)
+    
+    frames = []
+    for _ in range(0, int(RATE / CHUNK * duration)):
+        data = stream.read(CHUNK)
+        frames.append(data)
+    
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    
+    # Convert to WAV format
+    wav_buffer = wave.open("temp_audio.wav", "wb")
+    wav_buffer.setnchannels(CHANNELS)
+    wav_buffer.setsampwidth(p.get_sample_size(FORMAT))
+    wav_buffer.setframerate(RATE)
+    wav_buffer.writeframes(b"".join(frames))
+    wav_buffer.close()
+    
+    with open("temp_audio.wav", "rb") as f:
+        audio_data = f.read()
+    
+    return audio_data
+
+
+def main():
+    """Test VoiceEngine with 3 languages and 2 voices"""
+    
+    engine = VoiceEngine()
+    
+    # Test data: (text, language, language_name)
+    test_phrases = [
+        ("Hello, how are you today?", "en", "English"),
+        ("नमस्ते, आप कैसे हैं?", "hi", "Hindi"),
+        ("Olá, como você está?", "pt", "Portuguese")
+    ]
+    
+    genders = ["female", "male"]
+    
+    print("\n" + "="*60)
+    print("🎙️  VOICEENGINE TEST - 3 Languages × 2 Voices")
+    print("="*60 + "\n")
+    
+    # Test Text-to-Speech
+    print("📝 TEXT-TO-SPEECH TEST")
+    print("-" * 60)
+    
+    for text, lang, lang_name in test_phrases:
+        print(f"\n🌍 Language: {lang_name} ({lang})")
+        print(f"   Text: {text}")
+        
+        for gender in genders:
+            print(f"   🎵 Generating {gender} voice...", end=" ")
+            audio_data = engine.text_to_speech(text, language=lang, gender=gender)
+            
+            if audio_data:
+                print(f"✅ Success ({len(audio_data)} bytes)")
+                # Save for playback
+                filename = f"output_{lang}_{gender}.wav"
+                with open(filename, "wb") as f:
+                    f.write(audio_data)
+                print(f"      Saved to: {filename}")
+            else:
+                print("❌ Failed")
+    
+    # Test Speech-to-Text
+    print("\n\n🎤 SPEECH-TO-TEXT TEST")
+    print("-" * 60)
+    print("Recording live audio from microphone...")
+    
+    audio_data = record_audio(duration=5)
+    
+    if audio_data:
+        print("\n🔄 Converting speech to text...", end=" ")
+        result = engine.speech_to_text(audio_data)
+        
+        if result['text']:
+            print(f"✅ Success")
+            print(f"   Detected Language: {engine.get_language_name(result['language']).upper()}")
+            print(f"   Transcribed Text: {result['text']}")
+            
+            # Generate response in detected language
+            print(f"\n🎵 Generating response in detected language...")
+            response_audio = engine.text_to_speech(
+                f"You said: {result['text']}", 
+                language=result['language'],
+                gender="female"
+            )
+            
+            if response_audio:
+                response_file = "response_audio.wav"
+                with open(response_file, "wb") as f:
+                    f.write(response_audio)
+                print(f"   ✅ Response saved to: {response_file}")
+        else:
+            print("❌ No text detected")
+    else:
+        print("❌ Failed to record audio")
+    
+    print("\n" + "="*60)
+    print("✨ Test Complete!")
+    print("="*60 + "\n")
+
+
+if __name__ == "__main__":
+    main()
