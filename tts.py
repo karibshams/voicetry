@@ -1,42 +1,46 @@
-import os
 import pyttsx3
+import os
 
 class CoquiTTS:
     def __init__(self):
-        self.tts_models = {
-            "female": "tts_models/en/ljspeech/tacotron2-DDC",
-            "male": "tts_models/en/vctk/vits"
+        self.voices_list = {
+            "female": 1,
+            "male": 0
         }
-        self.tts_cache = {}
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
+        self.engine.setProperty('volume', 0.9)
     
     def get_model(self, voice: str):
-        if voice not in self.tts_models:
+        if voice not in self.voices_list:
             return {"status": "error", "message": f"Voice '{voice}' not supported"}
-        
-        if voice not in self.tts_cache:
-            self.tts_cache[voice] = TTS(self.tts_models[voice])
-        
-        return self.tts_cache[voice]
+        return voice
     
     def generate_speech(self, text: str, voice: str = "female", output_file: str = "output.wav"):
         try:
             if not text or len(text.strip()) == 0:
                 return {"status": "error", "message": "Text cannot be empty"}
             
-            tts = self.get_model(voice)
+            voice_check = self.get_model(voice)
             
-            if isinstance(tts, dict) and "error" in tts.get("status", ""):
-                return tts
+            if isinstance(voice_check, dict) and "error" in voice_check.get("status", ""):
+                return voice_check
+            
+            voices = self.engine.getProperty('voices')
+            voice_id = self.voices_list[voice]
+            
+            if voice_id < len(voices):
+                self.engine.setProperty('voice', voices[voice_id].id)
             
             self.engine.save_to_file(text, output_file)
             self.engine.runAndWait()
             
             if os.path.exists(output_file):
+                file_size = os.path.getsize(output_file)
                 return {
                     "status": "success",
                     "audio_file": output_file,
+                    "file_size": file_size,
                     "text": text,
                     "voice": voice
                 }
@@ -49,7 +53,7 @@ class CoquiTTS:
     def get_available_voices(self):
         return {
             "status": "success",
-            "voices": list(self.tts_models.keys())
+            "voices": list(self.voices_list.keys())
         }
     
     def batch_generate(self, requests: list):
@@ -65,6 +69,7 @@ class CoquiTTS:
 
 
 def main():
+    print("Initializing pyttsx3 TTS...")
     tts = CoquiTTS()
     
     while True:
@@ -89,6 +94,10 @@ def main():
             print("\nGenerating speech...")
             response = tts.generate_speech(text, voice, output)
             print(f"Response: {response}\n")
+            
+            if response["status"] == "success":
+                print(f"✓ Audio saved to: {response['audio_file']}")
+                print(f"✓ File size: {response['file_size']} bytes")
         
         elif choice == "2":
             voices = tts.get_available_voices()
