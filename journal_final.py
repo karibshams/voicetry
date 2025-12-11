@@ -262,3 +262,44 @@ class JournalAI:
         return self.memory
 
 
+from journal_final import JournalAI
+def main():
+    print("\n" + "="*60)
+    print("🌿 VoiceMind Journal AI - Live Chat (Fixed)")
+    print("="*60)
+    print("Type 'quit' to exit | 'summary' to end\n")
+    
+    journal = JournalAI()
+    print("Select Language: 1=English, 2=Hindi, 3=Portuguese")
+    lang = {'1': 'en', '2': 'hi', '3': 'pt'}.get(input("Choice (1-3): ").strip(), 'en')
+    
+    welcome = journal.start_chat(lang)
+    print(f"\n🤖 {welcome['response']}\n")
+    
+    while True:
+        user_input = input("👤 You: ").strip()
+        if not user_input:
+            continue
+        if user_input.lower() == 'quit':
+            print("\n👋 Goodbye!\n")
+            break
+        if user_input.lower() in ('summary', 'done'):
+            if not journal.memory:
+                print("\n⚠️  Share something first.\n")
+                continue
+            print("\n✅ Generating summary...\n")
+            final = journal.end_session()
+            print("="*60)
+            print(f"{final['summary']}\n")
+            print(f"💫 {final['final_message']}")
+            print("="*60 + "\n")
+            break
+        
+        response = journal.process_text(user_input)
+        # Print phase label. If crisis, show CRISIS explicitly.
+        phase_label = response['phase'].upper()
+        print(f"\n🤖 [{phase_label}]: {response['response']}\n")
+
+
+if __name__ == "__main__":
+    main()
