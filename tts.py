@@ -8,8 +8,8 @@ class CoquiTTS:
             "male": 0
         }
         self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', 150)
-        self.engine.setProperty('volume', 0.9)
+        self.engine.setProperty('rate', 120)
+        self.engine.setProperty('volume', 0.95)
     
     def get_model(self, voice: str):
         if voice not in self.voices_list:
