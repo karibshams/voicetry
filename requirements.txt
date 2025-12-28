@@ -3,7 +3,6 @@ textblob
 python-dotenv
 requests
 pyaudio
-wave
 fastapi
 uvicorn
 pyttsx3
